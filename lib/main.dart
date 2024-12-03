@@ -4,6 +4,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/core/app_bloc_observer.dart';
 import 'package:hiswana_migas/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:hiswana_migas/features/auth/presentation/bloc/kota/kota_bloc.dart';
+import 'package:hiswana_migas/features/auth/presentation/bloc/provkot/provinsi_bloc.dart';
 import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
@@ -55,6 +57,16 @@ class MyApp extends StatelessWidget {
           create: (_) => PostBloc(
             getPostsUseCase: di.sl(),
             createPostUseCase: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => ProvinsiBloc(
+            getProvinsi: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => KotaBloc(
+            getKota: di.sl(),
           ),
         ),
         BlocProvider(create: (_) => LikesCubit(di.sl())),

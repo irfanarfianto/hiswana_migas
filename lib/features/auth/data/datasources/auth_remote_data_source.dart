@@ -1,13 +1,20 @@
 import 'dart:convert';
 import 'package:hiswana_migas/core/exaption.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/auth/data/models/kota_model.dart';
+import 'package:hiswana_migas/features/auth/data/models/prov_model.dart';
 import 'package:hiswana_migas/features/auth/data/models/user_model.dart';
+import 'package:hiswana_migas/features/auth/domain/entities/kota_entities.dart';
+import 'package:hiswana_migas/features/auth/domain/entities/provinsi_entities.dart';
 import 'package:http/http.dart' as http;
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> getUserProfile(String userId);
   Future<UserModel> login(String email, String password);
-  Future<UserModel> register(String name, String email, String password);
+  Future<UserModel> register(String name, String email, String password,
+      String provinceCode, String cityCode, String profilePhoto);
+  Future<List<ProvinsiEntities>> getProvinsi();
+  Future<List<KotaEntities>> getKota(String provinsiCode);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -26,7 +33,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final token = await tokenLocalDataSource
           .getToken(); // Ensure this gets the token correctly
-      print('Token: $token'); // Debugging the token value
+      // Debugging the token value
 
       final response = await client.get(
         Uri.parse('${baseUrl}profile'),
@@ -37,9 +44,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         },
       );
 
-      print(
-          'response.statusCode: ${response.statusCode}, response.body: ${response.body}');
-
       if (response.statusCode == 200) {
         return UserModel.fromJson(json.decode(response.body));
       } else {
@@ -47,7 +51,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             'Gagal mendapatkan data user, silahkan coba lagi');
       }
     } catch (e) {
-      print('Error: $e'); // Log any exceptions
+      // Log any exceptions
       throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
     }
   }
@@ -66,9 +70,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'password': password,
         }),
       );
-
-      print(
-          'response.statusCode: ${response.statusCode}, response.body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
@@ -100,14 +101,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             'Gagal login, silahkan cek kembali email dan password.');
       }
     } catch (e) {
-      print('Error: $e');
       throw ServerException(
           'Gagal login, silahkan cek kembali email dan password.');
     }
   }
 
   @override
-  Future<UserModel> register(String name, String email, String password) async {
+  Future<UserModel> register(String name, String email, String password,
+      String provinceCode, String cityCode, String profilePhoto) async {
     try {
       final response = await client.post(
         Uri.parse('${baseUrl}register'),
@@ -119,8 +120,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'name': name,
           'email': email,
           'password': password,
+          'province_code': provinceCode,
+          'city_code': cityCode,
+          'profile_photo': profilePhoto,
         }),
       );
+      print(response.body);
+      print(response.statusCode);
       if (response.statusCode == 200) {
         return UserModel.fromJson(json.decode(response.body));
       } else {
@@ -128,6 +134,52 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (e) {
       throw ServerException('Gagal registrasi, silahkan coba lagi');
+    }
+  }
+
+  @override
+  Future<List<ProvinsiEntities>> getProvinsi() async {
+    try {
+      final response = await client.get(
+        Uri.parse('https://wilayah.id/api/provinces.json'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> prov = json.decode(response.body)['data'];
+        return prov.map((provinsi) => ProvModel.fromJson(provinsi)).toList();
+      } else {
+        throw ServerException(
+            'Gagal mendapatkan data user, silahkan coba lagi');
+      }
+    } catch (e) {
+      throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
+    }
+  }
+
+  @override
+  Future<List<KotaEntities>> getKota(String provinsiCode) async {
+    try {
+      final response = await client.get(
+        Uri.parse('https://wilayah.id/api/regencies/$provinsiCode.json'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> kota = json.decode(response.body)['data'];
+        return kota.map((kot) => KotaModel.fromJson(kot)).toList();
+      } else {
+        throw ServerException(
+            'Gagal mendapatkan data user, silahkan coba lagi');
+      }
+    } catch (e) {
+      throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:hiswana_migas/features/social%20media/domain/entities/post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/post_repository.dart';
 
 part 'likes_state.dart';

@@ -39,10 +39,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           event.name,
           event.email,
           event.password,
+          event.provinceCode,
+          event.cityCode,
+          event.profilePhoto,
         );
         emit(result.fold(
           (failure) => AuthError(message: _mapFailureToMessage(failure)),
-          (user) => AuthAuthenticated(user: user),
+          (user) => RegisterSuccess(user: user),
         ));
       } catch (e) {
         emit(AuthError(message: e.toString()));

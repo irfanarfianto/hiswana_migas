@@ -3,6 +3,8 @@ import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:hiswana_migas/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:hiswana_migas/features/auth/domain/repositories/auth_repository.dart';
+import 'package:hiswana_migas/features/auth/domain/usecase/get_kota.dart';
+import 'package:hiswana_migas/features/auth/domain/usecase/get_provinsi.dart';
 import 'package:hiswana_migas/features/auth/domain/usecase/get_user_profile_usecase.dart';
 import 'package:hiswana_migas/features/auth/domain/usecase/login_usecase.dart';
 import 'package:hiswana_migas/features/auth/domain/usecase/register_usecase.dart';
@@ -31,6 +33,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => GetProvinsiUsecase(sl()));
+  sl.registerLazySingleton(() => GetKotaUsecase(sl()));
   // Post Usecases
   sl.registerLazySingleton(() => GetPostsUseCase(sl()));
   sl.registerLazySingleton(() => CreatePostUseCase(sl()));

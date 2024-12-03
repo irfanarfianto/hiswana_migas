@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/auth/presentation/bloc/provkot/provinsi_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/image_upload.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/post_widget.dart';
@@ -31,6 +32,7 @@ class _BerandaPageState extends State<BerandaPage> {
       final token = await tokenLocalDataSource.getToken();
       if (token != null && token.isNotEmpty && mounted) {
         BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
+        BlocProvider.of<ProvinsiBloc>(context).add(GetProvinsi());
       }
     } catch (e) {}
   }
@@ -43,16 +45,27 @@ class _BerandaPageState extends State<BerandaPage> {
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(70.0),
           child: AppBar(
-            foregroundColor: Colors.white,
-            backgroundColor: Theme.of(context).primaryColor,
-            title: const Text('Beranda'),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(15.0),
-                bottomRight: Radius.circular(15.0),
+              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).primaryColor,
+              title: const Text('Beranda'),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(15.0),
+                  bottomRight: Radius.circular(15.0),
+                ),
               ),
-            ),
-          ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    tokenLocalDataSource.deleteToken();
+                    context.go('/welcome2');
+                  },
+                  icon: const Icon(
+                    Icons.exit_to_app,
+                    color: Colors.white,
+                  ),
+                ),
+              ]),
         ),
         body: RefreshIndicator(
           onRefresh: () async {

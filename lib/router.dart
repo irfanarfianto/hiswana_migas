@@ -12,6 +12,7 @@ import 'package:hiswana_migas/features/social%20media/domain/entities/detail_pos
 import 'package:hiswana_migas/features/social%20media/presentation/beranda_page.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/create_post_page.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/detail_post_page.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/edit_post_page.dart';
 
 GoRouter createRouter() {
   return GoRouter(
@@ -77,9 +78,16 @@ GoRouter createRouter() {
         name: 'detail-post',
         path: '/detail-post',
         builder: (context, state) {
-          final post =
-              state.extra as DetailPostEntity; // Mengambil data yang dikirim
-          return DetailPostPage(post: post); // Kirimkan data ke halaman detail
+          final post = state.extra as DetailPostEntity;
+          return DetailPostPage(post: post);
+        },
+      ),
+      GoRoute(
+        name: 'edit-post',
+        path: '/edit-post',
+        builder: (context, state) {
+          final post = state.extra as DetailPostEntity;
+          return EditPostPage(post: post);
         },
       ),
       GoRoute(
@@ -97,13 +105,11 @@ GoRouter createRouter() {
 class CustomNavigatorObserver extends NavigatorObserver {
   @override
   void didPop(Route route, Route? previousRoute) {
-    // Add your custom logic here
     super.didPop(route, previousRoute);
   }
 
   @override
   void didPush(Route route, Route? previousRoute) {
-    // Optionally add logic for when a route is pushed
     super.didPush(route, previousRoute);
   }
 }

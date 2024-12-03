@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
@@ -75,7 +77,6 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  // Membangun widget PopupMenu
   Widget _buildPopupMenu(BuildContext context) {
     return BlocListener<DeleteCubit, DeleteState>(
       listener: (context, state) {
@@ -100,7 +101,6 @@ class PostWidget extends StatelessWidget {
         ),
         onSelected: (value) {
           if (value == 'edit') {
-            // Implement edit functionality
           } else if (value == 'hapus') {
             _showDeleteConfirmationDialog(context, post.id);
           }
@@ -108,6 +108,10 @@ class PostWidget extends StatelessWidget {
         itemBuilder: (context) {
           return [
             PopupMenuItem<String>(
+              onTap: () => context.pushNamed(
+                'edit-post',
+                extra: post,
+              ),
               value: 'edit',
               child: Row(
                 children: [
@@ -146,7 +150,6 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  // Dialog konfirmasi penghapusan
   void _showDeleteConfirmationDialog(BuildContext context, int postId) {
     showDialog(
       context: context,
@@ -172,7 +175,6 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  // Membangun konten post (caption dan gambar)
   Widget _buildPostContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,9 +220,11 @@ class PostWidget extends StatelessWidget {
                     );
                   },
                   child: ClipRRect(
-                    child: Image.asset(
-                      'assets/user.jpg',
+                    child: CachedNetworkImage(
+                      imageUrl: '${dotenv.env['APP_URL']}${post.photos[index]}',
                       fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
                     ),
                   ),
                 );
@@ -270,6 +274,25 @@ class PostWidget extends StatelessWidget {
                 ),
           ),
         ),
+        if (post.photos.isNotEmpty || post.comments.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ReadMoreText(
+              textAlign: TextAlign.start,
+              post.caption ?? '',
+              trimLines: 2,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
+              trimMode: TrimMode.Line,
+              colorClickableText: Theme.of(context).colorScheme.onSecondary,
+              trimCollapsedText: 'Selengkapnya',
+              trimExpandedText: 'Sembunyikan',
+              moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onSecondary,
+                  ),
+            ),
+          ),
         if (post.comments.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

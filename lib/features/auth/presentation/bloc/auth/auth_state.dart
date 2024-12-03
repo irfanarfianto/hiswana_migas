@@ -17,6 +17,12 @@ class AuthAuthenticated extends AuthState {
   const AuthAuthenticated({required this.user});
 }
 
+class RegisterSuccess extends AuthState {
+  final User user;
+
+  const RegisterSuccess({required this.user});
+}
+
 class AuthError extends AuthState {
   final String message;
 
