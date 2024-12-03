@@ -30,9 +30,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final token = await _tokenLocalDataSource.getToken();
 
     if (token == null || token.isEmpty) {
-      context.pushReplacementNamed('beranda');
+      context.pushReplacementNamed('welcome1');
     } else {
-      context.pushReplacementNamed('home');
+      context.pushReplacementNamed('beranda');
     }
   }
 

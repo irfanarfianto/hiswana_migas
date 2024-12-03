@@ -3,14 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/core/app_bloc_observer.dart';
+import 'package:hiswana_migas/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/features/theme/cubit/switch_theme_cubit.dart';
 import 'package:hiswana_migas/router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hiswana_migas/injection.dart' as di;
 import 'package:hiswana_migas/core/theme/app_pallete.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  timeago.setLocaleMessages('id', timeago.IdMessages());
   await dotenv.load(fileName: ".env");
   await di.init();
 
@@ -32,6 +39,26 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => SwitchThemeCubit(),
         ),
+        BlocProvider(
+          create: (_) => AuthBloc(
+            loginUseCase: di.sl(),
+            registerUseCase: di.sl(),
+            getUserProfileUseCase: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => UserBloc(
+            getUserInfo: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => PostBloc(
+            getPostsUseCase: di.sl(),
+            createPostUseCase: di.sl(),
+          ),
+        ),
+        BlocProvider(create: (_) => LikesCubit(di.sl())),
+        BlocProvider(create: (_) => DeleteCubit(di.sl())),
       ],
       child: BlocBuilder<SwitchThemeCubit, SwitchThemeState>(
           builder: (context, themeState) {

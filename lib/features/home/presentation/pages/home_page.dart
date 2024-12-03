@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,6 +14,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late final TokenLocalDataSource tokenLocalDataSource;
+
+  @override
+  void initState() {
+    super.initState();
+    const storage = FlutterSecureStorage();
+    tokenLocalDataSource = TokenLocalDataSource(storage);
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final token = await tokenLocalDataSource.getToken();
+      if (token != null && token.isNotEmpty && mounted) {
+        BlocProvider.of<UserBloc>(context).add(GetUser(token: token));
+        BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
+      }
+    } catch (e) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScrollConfiguration(
@@ -39,19 +64,48 @@ class _HomePageState extends State<HomePage> {
                                 .bodyLarge!
                                 .copyWith(color: Colors.white),
                           ),
-                          Text(
-                            'John Doe',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium!
-                                .copyWith(
+                          BlocBuilder<UserBloc, UserState>(
+                            builder: (context, state) {
+                              if (state is UserLoading) {
+                                return const CircularProgressIndicator(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                );
+                              } else if (state is UserLoaded) {
+                                return Text(
+                                  state.user.name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium!
+                                      .copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                );
+                              } else if (state is UserError) {
+                                return Text(
+                                  state.message,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(color: Colors.white),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
                           ),
                         ],
                       ),
                       const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          tokenLocalDataSource.deleteToken();
+                          context.go('/welcome2');
+                        },
+                        icon: const Icon(
+                          Icons.exit_to_app,
+                          color: Colors.white,
+                        ),
+                      ),
                       const CircleAvatar(
                         radius: 25,
                         backgroundImage: AssetImage('assets/user.jpg'),
@@ -182,30 +236,37 @@ class _HomePageState extends State<HomePage> {
                             Image.asset('assets/circle user.png', width: 250),
                             Positioned(
                               top: 92,
-                              child: Column(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 90,
-                                    backgroundImage: AssetImage(
-                                      'assets/user.jpg',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  Text(
-                                    'John Doe',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium!
-                                        .copyWith(
-                                          fontWeight: FontWeight.bold,
+                              child: BlocBuilder<UserBloc, UserState>(
+                                builder: (context, state) {
+                                  if (state is UserLoaded) {
+                                    return Column(
+                                      children: [
+                                        const CircleAvatar(
+                                          radius: 90,
+                                          backgroundImage: AssetImage(
+                                            'assets/user.jpg',
+                                          ),
                                         ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text('No. Anggota',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
-                                ],
+                                        const SizedBox(height: 15),
+                                        Text(
+                                          state.user.name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineMedium!
+                                              .copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(state.user.uniqueNumber,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium),
+                                      ],
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
                               ),
                             ),
                           ],

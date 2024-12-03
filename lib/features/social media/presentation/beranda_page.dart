@@ -1,9 +1,12 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
-import 'package:readmore/readmore.dart';
+import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/widget/image_upload.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/widget/post_widget.dart';
 
 class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
@@ -13,6 +16,25 @@ class BerandaPage extends StatefulWidget {
 }
 
 class _BerandaPageState extends State<BerandaPage> {
+  late final TokenLocalDataSource tokenLocalDataSource;
+
+  @override
+  void initState() {
+    super.initState();
+    const storage = FlutterSecureStorage();
+    tokenLocalDataSource = TokenLocalDataSource(storage);
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final token = await tokenLocalDataSource.getToken();
+      if (token != null && token.isNotEmpty && mounted) {
+        BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
+      }
+    } catch (e) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScrollConfiguration(
@@ -32,8 +54,11 @@ class _BerandaPageState extends State<BerandaPage> {
             ),
           ),
         ),
-        body: Column(
-          children: [
+        body: RefreshIndicator(
+          onRefresh: () async {
+            _loadUserInfo();
+          },
+          child: Column(children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
@@ -49,7 +74,14 @@ class _BerandaPageState extends State<BerandaPage> {
                   const SizedBox(width: 5),
                   InkWell(
                     onTap: () {
-                      context.pushNamed('create-post');
+                      context.pushNamed('create-post').then((refresh) {
+                        if (refresh is bool && refresh) {
+                          setState(() {
+                            _loadUserInfo();
+                          });
+                        }
+                      });
+                      ;
                     },
                     child: DottedBorder(
                       borderType: BorderType.RRect,
@@ -79,7 +111,14 @@ class _BerandaPageState extends State<BerandaPage> {
                       color: Theme.of(context).colorScheme.onSecondary,
                       size: 35,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        builder: (context) => const ImageUploadWidget(),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -88,229 +127,32 @@ class _BerandaPageState extends State<BerandaPage> {
               height: 5,
               color: Theme.of(context).colorScheme.onSecondary,
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: 15,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          onTap: () {
-                            context.pushNamed('detail-post');
-                          },
-                          isThreeLine: true,
-                          leading: InkWell(
-                            onTap: () {},
-                            child: const CircleAvatar(
-                              radius: 20,
-                              backgroundImage: AssetImage('assets/user.jpg'),
-                            ),
-                          ),
-                          title: Text(
-                            'Nama User',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge!
-                                .copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '33 77 0001',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary,
-                                    ),
-                              ),
-                              Text(
-                                'Waktu posting',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall!
-                                    .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondary,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          trailing: PopupMenuButton<String>(
-                            icon: Icon(
-                              Icons.more_vert,
-                              color: Theme.of(context).colorScheme.onSecondary,
-                            ),
-                            onSelected: (value) {
-                              if (value == 'edit') {
-                                // implement edit comment
-                              } else if (value == 'hapus') {
-                                // implement delete comment
-                              }
-                            },
-                            itemBuilder: (context) {
-                              return [
-                                PopupMenuItem<String>(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.edit,
-                                        size: 20,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSecondary,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      const Text('Edit'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'hapus',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete,
-                                        size: 20,
-                                        color:
-                                            Theme.of(context).colorScheme.error,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Hapus',
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .error),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ];
-                            },
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            context.pushNamed('detail-post');
-                          },
-                          child: ClipRRect(
-                            child: Image.asset(
-                              'assets/user.jpg',
-                              height: MediaQuery.of(context).size.width,
-                              width: MediaQuery.of(context).size.width,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(
-                                      Icons.favorite,
-                                      color: Colors.red,
-                                      size: 35,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {},
-                                    icon: const FaIcon(
-                                      FontAwesomeIcons.comment,
-                                      size: 35,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(
-                                '100 Suka',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: ReadMoreText(
-                                'Flutter is Google’s mobile UI open source framework to build high-quality native (super fast) interfaces for iOS and Android apps with the unified codebase.',
-                                trimLines: 2,
-                                trimMode: TrimMode.Line,
-                                colorClickableText:
-                                    Theme.of(context).colorScheme.onSecondary,
-                                trimCollapsedText: 'Selengkapnya',
-                                trimExpandedText: 'Sembunyikan',
-                                moreStyle: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondary,
-                                    ),
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: InkWell(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    showDragHandle: true,
-                                    isScrollControlled: true,
-                                    builder: (context) =>
-                                        const CommentsWidget(),
-                                  );
-                                },
-                                child: Text(
-                                  'Lihat semua 10 komentar',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSecondary,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+            BlocBuilder<PostBloc, PostState>(
+              builder: (context, state) {
+                print(state);
+                if (state is PostLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is PostError) {
+                  return Center(child: Text(state.message));
+                }
+                if (state is PostLoaded) {
+                  return Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: state.posts.length,
+                      itemBuilder: (context, index) {
+                        final post = state.posts[index];
+                        return PostWidget(post: post);
+                      },
                     ),
                   );
-                },
-              ),
-            ),
-          ],
+                }
+                return SizedBox.shrink();
+              },
+            )
+          ]),
         ),
       ),
     );

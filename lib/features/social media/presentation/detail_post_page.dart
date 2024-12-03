@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
+import 'package:readmore/readmore.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class DetailPostPage extends StatefulWidget {
-  const DetailPostPage({super.key});
+  final DetailPostEntity post;
+  const DetailPostPage({super.key, required this.post});
 
   @override
   State<DetailPostPage> createState() => _DetailPostPageState();
@@ -11,7 +15,15 @@ class DetailPostPage extends StatefulWidget {
 
 class _DetailPostPageState extends State<DetailPostPage> {
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Jangan melakukan inisialisasi ulang 'post' di sini
+    // Pastikan tidak ada inisialisasi ulang setelah widget dipanggil
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return ScrollConfiguration(
       behavior: const ScrollBehavior().copyWith(overscroll: false),
       child: Scaffold(
@@ -21,6 +33,7 @@ class _DetailPostPageState extends State<DetailPostPage> {
           title: const Text('Detail Postingan'),
         ),
         body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
               isThreeLine: true,
@@ -32,7 +45,7 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 ),
               ),
               title: Text(
-                'Nama User',
+                post.user.name,
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
@@ -41,13 +54,16 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '33 77 0001',
+                    post.user.uniqueNumber,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
                   ),
                   Text(
-                    'Waktu posting',
+                    timeago.format(
+                      DateTime.parse('${post.createdAt}').toLocal(),
+                      locale: 'id',
+                    ),
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           color: Theme.of(context).colorScheme.onSecondary,
                         ),
@@ -104,14 +120,40 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 },
               ),
             ),
-            ClipRRect(
-              child: Image.asset(
-                'assets/user.jpg',
+            if (post.photos.isNotEmpty)
+              SizedBox(
                 height: MediaQuery.of(context).size.width,
-                width: MediaQuery.of(context).size.width,
-                fit: BoxFit.cover,
+                child: PageView.builder(
+                  itemCount: post.photos.length,
+                  itemBuilder: (context, index) {
+                    return ClipRRect(
+                      child: Image.asset(
+                        'assets/user.jpg',
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
+            if (post.photos.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ReadMoreText(
+                  textAlign: TextAlign.start,
+                  post.caption ?? '',
+                  trimLines: 3,
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  trimMode: TrimMode.Line,
+                  colorClickableText: Theme.of(context).colorScheme.onSecondary,
+                  trimCollapsedText: 'Selengkapnya',
+                  trimExpandedText: 'Sembunyikan',
+                  moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                ),
+              ),
             const SizedBox(height: 5),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,18 +184,18 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    '100 Suka',
+                    '${post.likes.length} suka',
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!
                         .copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                        'Flutter is Google’s mobile UI open source framework to build high-quality native (super fast) interfaces for iOS and Android apps with the unified codebase.',
-                        style: Theme.of(context).textTheme.bodyMedium)),
+                if (post.photos.isNotEmpty)
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(post.caption ?? '',
+                          style: Theme.of(context).textTheme.bodyMedium)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: InkWell(

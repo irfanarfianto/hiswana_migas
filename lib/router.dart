@@ -8,10 +8,10 @@ import 'package:hiswana_migas/features/auth/presentation/pages/reset_password_pa
 import 'package:hiswana_migas/features/auth/presentation/pages/welcome1_page.dart';
 import 'package:hiswana_migas/features/auth/presentation/pages/welcome2_page.dart';
 import 'package:hiswana_migas/features/home/presentation/pages/home_page.dart';
+import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/beranda_page.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/create_post_page.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/detail_post_page.dart';
-import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
 
 GoRouter createRouter() {
   return GoRouter(
@@ -76,14 +76,11 @@ GoRouter createRouter() {
       GoRoute(
         name: 'detail-post',
         path: '/detail-post',
-        pageBuilder: (context, state) =>
-            const MaterialPage(child: DetailPostPage()),
-      ),
-      GoRoute(
-        name: 'komentar',
-        path: '/komentar',
-        pageBuilder: (context, state) =>
-            const MaterialPage(child: CommentsWidget()),
+        builder: (context, state) {
+          final post =
+              state.extra as DetailPostEntity; // Mengambil data yang dikirim
+          return DetailPostPage(post: post); // Kirimkan data ke halaman detail
+        },
       ),
       GoRoute(
         name: 'error',
