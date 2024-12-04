@@ -19,7 +19,7 @@ class UserModel extends User {
       cityCode: json['city_code'] ?? '',
       registerNumber: (json['register_number'] ?? 0).toString(),
       uniqueNumber: json['unique_number'] ?? '',
-      profilePhoto: json['profile_photo'] ?? 'default.jpg',
+      profilePhoto: json['profile_photo'],
     );
   }
 

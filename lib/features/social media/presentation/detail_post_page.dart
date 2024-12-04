@@ -1,7 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
+import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:readmore/readmore.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -39,9 +44,9 @@ class _DetailPostPageState extends State<DetailPostPage> {
               isThreeLine: true,
               leading: InkWell(
                 onTap: () {},
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 20,
-                  backgroundImage: AssetImage('assets/user.jpg'),
+                  backgroundImage: NetworkImage('${post.user.profilePhoto}'),
                 ),
               ),
               title: Text(
@@ -127,9 +132,12 @@ class _DetailPostPageState extends State<DetailPostPage> {
                   itemCount: post.photos.length,
                   itemBuilder: (context, index) {
                     return ClipRRect(
-                      child: Image.asset(
-                        'assets/user.jpg',
+                      child: CachedNetworkImage(
+                        imageUrl:
+                            '${dotenv.env['APP_URL']}${post.photos[index]}',
                         fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            const Center(child: CircularProgressIndicator()),
                       ),
                     );
                   },
@@ -160,25 +168,48 @@ class _DetailPostPageState extends State<DetailPostPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.favorite,
-                          color: Colors.red,
-                          size: 35,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const FaIcon(
-                          FontAwesomeIcons.comment,
-                          size: 35,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                  child: BlocBuilder<LikesCubit, LikesState>(
+                    builder: (context, state) {
+                      bool isLiked = false;
+                      if (state is PostLikeLoaded && state.postId == post.id) {
+                        isLiked = state.isLiked;
+                      }
+                      return Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              context.read<LikesCubit>().postLike(post.id);
+                              if (isLiked) {
+                                showToast(message: 'Batal menyukai');
+                              } else {
+                                showToast(message: 'Menyukai');
+                              }
+                            },
+                            icon: Icon(
+                              Icons.favorite,
+                              color: isLiked ? Colors.red : Colors.grey,
+                              size: 35,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                showDragHandle: true,
+                                isScrollControlled: true,
+                                builder: (context) =>
+                                    CommentsWidget(postId: post.id),
+                              );
+                            },
+                            icon: const FaIcon(
+                              FontAwesomeIcons.comment,
+                              size: 35,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -204,11 +235,13 @@ class _DetailPostPageState extends State<DetailPostPage> {
                         context: context,
                         showDragHandle: true,
                         isScrollControlled: true,
-                        builder: (context) => const CommentsWidget(),
+                        builder: (context) => CommentsWidget(
+                          postId: post.id,
+                        ),
                       );
                     },
                     child: Text(
-                      'Lihat semua 10 komentar',
+                      'Lihat semua ${post.comments.length} komentar',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             color: Theme.of(context).colorScheme.onSecondary,
                           ),

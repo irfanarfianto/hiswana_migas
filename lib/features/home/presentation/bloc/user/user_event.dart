@@ -7,10 +7,10 @@ sealed class UserEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class GetUser extends UserEvent {
+class GetUserEvent extends UserEvent {
   final String token;
 
-  const GetUser({required this.token});
+  const GetUserEvent({required this.token});
 
   @override
   List<Object> get props => [token];

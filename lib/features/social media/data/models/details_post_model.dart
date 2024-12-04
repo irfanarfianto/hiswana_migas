@@ -11,7 +11,7 @@ class DetailsPostModel extends DetailPostEntity {
     required super.updatedAt,
     required UserModel super.user,
     required List<LikeModel> super.likes,
-    required List<CommentModel> super.comments,
+    required List<CommentModelPost> super.comments,
   });
 
   factory DetailsPostModel.fromJson(Map<String, dynamic> json) {
@@ -24,7 +24,7 @@ class DetailsPostModel extends DetailPostEntity {
       user: UserModel.fromJson(json['user']),
       likes: (json['likes'] as List).map((e) => LikeModel.fromJson(e)).toList(),
       comments: (json['comments'] as List)
-          .map((e) => CommentModel.fromJson(e))
+          .map((e) => CommentModelPost.fromJson(e))
           .toList(),
     );
   }
@@ -42,8 +42,8 @@ class LikeModel extends Like {
   }
 }
 
-class CommentModel extends Comment {
-  CommentModel({
+class CommentModelPost extends CommentPost {
+  CommentModelPost({
     required super.id,
     required super.postId,
     required super.userId,
@@ -51,8 +51,8 @@ class CommentModel extends Comment {
     required super.createdAt,
   });
 
-  factory CommentModel.fromJson(Map<String, dynamic> json) {
-    return CommentModel(
+  factory CommentModelPost.fromJson(Map<String, dynamic> json) {
+    return CommentModelPost(
       id: json['id'],
       postId: json['post_id'],
       userId: json['user_id'],

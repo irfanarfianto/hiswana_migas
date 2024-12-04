@@ -1,24 +1,15 @@
-// Entity untuk User
-class User {
-  final String name;
-  final String profilePhoto;
+import 'package:equatable/equatable.dart';
+import 'package:hiswana_migas/features/auth/domain/entities/user_entities.dart';
 
-  User({
-    required this.name,
-    required this.profilePhoto,
-  });
-}
-
-// Entity untuk Reply
-class Reply {
+class Reply extends Equatable  {
   final int id;
   final int postId;
-  final int? parentId; // Bisa null
+  final int? parentId;
   final String content;
   final DateTime createdAt;
   final User user;
 
-  Reply({
+  const Reply({
     required this.id,
     required this.postId,
     this.parentId,
@@ -26,19 +17,30 @@ class Reply {
     required this.createdAt,
     required this.user,
   });
+  
+  @override
+  List<Object?> get props => [
+    id,
+    postId,
+    parentId,
+    content,
+    createdAt,
+    user,
+  ];
+
+  toJson() {}
 }
 
-// Entity untuk Comment
-class Comment {
+class Comment extends Equatable {
   final int id;
   final int postId;
-  final int? parentId; // Bisa null
+  final int? parentId;
   final String content;
   final DateTime createdAt;
   final User user;
   final List<Reply> replies;
 
-  Comment({
+  const Comment({
     required this.id,
     required this.postId,
     this.parentId,
@@ -47,4 +49,15 @@ class Comment {
     required this.user,
     required this.replies,
   });
+
+  @override
+  List<Object?> get props => [
+        id,
+        postId,
+        parentId,
+        content,
+        createdAt,
+        user,
+        replies,
+      ];
 }

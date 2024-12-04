@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:hiswana_migas/core/exaption.dart';
 import 'package:hiswana_migas/core/failure.dart';
@@ -41,11 +43,11 @@ class AuthRepositoryImpl implements AuthRepository {
     String password,
     String provinceCode,
     String cityCode,
-    String? profilePhoto,
+    File? profilePhoto,
   ) async {
     try {
       final result = await remoteDataSource.register(
-          name, email, password, provinceCode, cityCode, profilePhoto!);
+          name, email, password, provinceCode, cityCode, profilePhoto);
       return Right(result);
     } on ServerException {
       return const Left(ServerFailure('Gagal registrasi, silahkan coba lagi.'));

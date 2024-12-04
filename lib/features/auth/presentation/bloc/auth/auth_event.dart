@@ -21,28 +21,30 @@ class RegisterEvent extends AuthEvent {
   final String name;
   final String email;
   final String password;
+  final String confirmPassword;
   final String provinceCode;
   final String cityCode;
-  final String profilePhoto;
+  final File? profilePhoto;
 
   const RegisterEvent({
     required this.name,
     required this.email,
     required this.password,
+    required this.confirmPassword,
     required this.provinceCode,
     required this.cityCode,
     required this.profilePhoto,
   });
 
   @override
-  List<Object?> get props => [name, email, password, provinceCode, cityCode, profilePhoto];
+  List<Object?> get props => [
+        name,
+        email,
+        password,
+        confirmPassword,
+        provinceCode,
+        cityCode,
+        profilePhoto
+      ];
 }
 
-class GetUserProfileEvent extends AuthEvent {
-  final String token;
-
-  const GetUserProfileEvent({required this.token});
-
-  @override
-  List<Object?> get props => [token];
-}

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hiswana_migas/core/failure.dart';
@@ -51,24 +53,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(message: e.toString()));
       }
     });
-
-    on<GetUserProfileEvent>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        final result = await getUserProfileUseCase.execute(event.token);
-        emit(result.fold(
-          (failure) => AuthError(message: _mapFailureToMessage(failure)),
-          (user) => AuthAuthenticated(user: user),
-        ));
-      } catch (e) {
-        emit(AuthError(message: e.toString()));
-      }
-    });
   }
   String _mapFailureToMessage(Failure failure) {
-    // Tentukan bagaimana kegagalan dipetakan menjadi pesan yang bisa ditampilkan
     if (failure is ServerFailure) {
-      return 'Server Error: ${failure.message}';
+      return failure.message;
     } else if (failure is NetworkFailure) {
       return 'Network Error: ${failure.message}';
     } else {

@@ -38,9 +38,12 @@ class PostWidget extends StatelessWidget {
             isThreeLine: true,
             leading: InkWell(
               onTap: () {},
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 radius: 20,
-                backgroundImage: AssetImage('assets/user.jpg'),
+                backgroundImage: post.user.profilePhoto == 'default.jpg'
+                    ? const AssetImage('assets/user.jpg')
+                    : CachedNetworkImageProvider(
+                        '${dotenv.env['APP_URL']}${post.user.profilePhoto}'),
               ),
             ),
             title: Text(
@@ -245,6 +248,11 @@ class PostWidget extends StatelessWidget {
                   IconButton(
                     onPressed: () {
                       context.read<LikesCubit>().postLike(post.id);
+                      if (isLiked) {
+                        showToast(message: 'Batal menyukai');
+                      } else {
+                        showToast(message: 'Menyukai');
+                      }
                     },
                     icon: Icon(
                       Icons.favorite,
@@ -253,7 +261,14 @@ class PostWidget extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        builder: (context) => CommentsWidget(postId: post.id),
+                      );
+                    },
                     icon: const FaIcon(
                       FontAwesomeIcons.comment,
                       size: 35,
@@ -302,7 +317,7 @@ class PostWidget extends StatelessWidget {
                   context: context,
                   showDragHandle: true,
                   isScrollControlled: true,
-                  builder: (context) => const CommentsWidget(),
+                  builder: (context) => CommentsWidget(postId: post.id),
                 );
               },
               child: Text(

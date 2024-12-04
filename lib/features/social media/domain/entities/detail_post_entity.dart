@@ -8,7 +8,7 @@ class DetailPostEntity {
   final DateTime updatedAt;
   final User user;
   final List<Like> likes;
-  final List<Comment> comments;
+  final List<CommentPost> comments;
 
   DetailPostEntity({
     required this.id,
@@ -30,14 +30,14 @@ class Like {
   Like({required this.id, required this.userId, required this.postId});
 }
 
-class Comment {
+class CommentPost {
   final int id;
   final int postId;
   final int userId;
   final String content;
   final DateTime createdAt;
 
-  Comment({
+  CommentPost({
     required this.id,
     required this.postId,
     required this.userId,

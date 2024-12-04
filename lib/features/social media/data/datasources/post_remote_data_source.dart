@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:hiswana_migas/core/failure.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/social%20media/data/models/comment_model.dart';
 import 'package:hiswana_migas/features/social%20media/data/models/details_post_model.dart';
 import 'package:hiswana_migas/features/social%20media/data/models/post_model.dart';
+import 'package:hiswana_migas/features/social%20media/domain/entities/comment_entity.dart';
 import 'package:http/http.dart' as http;
 
 abstract class PostRemoteDataSource {
   Future<List<DetailsPostModel>> getPosts();
-  // Future<List<Comment>> getComments(int postId);
+  Future<List<Comment>> getComments(int postId);
   Future<PostModel> postCreate(PostModel postCreate);
   Future<Either<Failure, void>> postLike(int postId);
   Future<Either<Failure, void>> deletePost(int postId);
@@ -38,6 +40,8 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
         },
       );
 
+      print(response.body);
+
       if (response.statusCode == 200) {
         final List<dynamic> posts = json.decode(response.body)['data'];
         return posts.map((post) => DetailsPostModel.fromJson(post)).toList();
@@ -49,29 +53,31 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     }
   }
 
-  // @override
-  // Future<List<Comment>> getComments(int postId) async {
-  //   try {
-  //     final token = await tokenLocalDataSource.getToken();
-  //     final response = await client.get(
-  //       Uri.parse('${baseUrl}posts/$postId/comments'),
-  //       headers: {
-  //         'Accept': 'application/json',
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer $token',
-  //       },
-  //     );
+  @override
+  Future<List<Comment>> getComments(int postId) async {
+    try {
+      final token = await tokenLocalDataSource.getToken();
+      final response = await client.get(
+        Uri.parse('${baseUrl}posts/$postId/comments'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-  //     if (response.statusCode == 200) {
-  //       final List<dynamic> comments = json.decode(response.body)['data'];
-  //       return comments.map((comment) => Comment.fromJson(comment)).toList();
-  //     } else {
-  //       throw Exception('Failed to load comments: ${response.body}');
-  //     }
-  //   } on Exception catch (e) {
-  //     throw Exception('Error loading comments: $e');
-  //   }
-  // }
+      if (response.statusCode == 200) {
+        final List<dynamic> comments = json.decode(response.body)['data'];
+        return comments
+            .map((comment) => CommentModel.fromJson(comment))
+            .toList();
+      } else {
+        throw Exception('Failed to load comments: ${response.body}');
+      }
+    } on Exception catch (e) {
+      throw Exception('Error loading comments: $e');
+    }
+  }
 
   @override
   Future<PostModel> postCreate(PostModel postCreate) async {
@@ -133,7 +139,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
     try {
       final response = await request.send();
-      print('Response like post: ${response.statusCode}');
       if (response.statusCode == 200) {
         return const Right(null);
       } else {
@@ -142,7 +147,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             'Failed to like post: ${response.statusCode} - ${response.reasonPhrase}, Response: $errorResponse');
       }
     } on Exception catch (e) {
-      print('Error liking post: $e');
       throw Exception('Error liking post: $e');
     }
   }
@@ -156,7 +160,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
     try {
       final response = await request.send();
-      print('Response delete post: ${response.statusCode}');
       if (response.statusCode == 200) {
         return const Right(null);
       } else {
@@ -165,7 +168,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             'Failed to delete post: ${response.statusCode} - ${response.reasonPhrase}, Response: $errorResponse');
       }
     } on Exception catch (e) {
-      print('Error deleting post: $e');
       throw Exception('Error deleting post: $e');
     }
   }

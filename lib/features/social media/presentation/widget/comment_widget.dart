@@ -1,133 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/domain/entities/comment_entity.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/comments/comments_bloc.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class CommentsWidget extends StatefulWidget {
-  const CommentsWidget({super.key});
+  final int postId;
+
+  const CommentsWidget({super.key, required this.postId});
 
   @override
   State<CommentsWidget> createState() => _CommentsWidgetState();
 }
 
 class _CommentsWidgetState extends State<CommentsWidget> {
-  final List<Map<String, dynamic>> comments = [
-    {
-      'user': 'User 1',
-      'comment': 'Komentar pertama!',
-      'time': '1 jam yang lalu',
-      'replies': [
-        {
-          'user': 'User 2',
-          'comment': 'Balasan pertama!',
-          'time': '50 menit lalu'
-        },
-        {
-          'user': 'User 3',
-          'comment': 'Balasan kedua!',
-          'time': '30 menit lalu'
-        },
-        {
-          'user': 'User 5',
-          'comment': 'Balasan kelima!',
-          'time': '10 menit lalu'
-        },
-      ]
-    },
-    {
-      'user': 'User 4',
-      'comment': 'Komentar kedua!',
-      'time': '2 jam yang lalu',
-      'replies': [
-        {
-          'user': 'User 2',
-          'comment': 'Balasan pertama!',
-          'time': '50 menit lalu'
-        },
-      ],
-    },
-  ];
-
-  void _addReply(int commentIndex, String reply) {
-    setState(() {
-      comments[commentIndex]['replies'].add({
-        'user': 'User Anda',
-        'comment': reply,
-        'time': 'Baru saja',
-      });
-    });
-  }
-
-  void _showReplyDialog(BuildContext context, int commentIndex) {
-    final TextEditingController replyController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Balas Komentar'),
-          content: TextField(
-            controller: replyController,
-            decoration: const InputDecoration(hintText: 'Tulis balasan Anda'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (replyController.text.isNotEmpty) {
-                  _addReply(commentIndex, replyController.text);
-                }
-                Navigator.pop(context);
-              },
-              child: const Text('Kirim'),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    BlocProvider.of<CommentsBloc>(context).add(GetComments(widget.postId));
   }
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.6,
-      maxChildSize: 1,
-      minChildSize: 0.4,
-      builder: (_, scrollController) {
-        return SingleChildScrollView(
-          controller: scrollController,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Komentar',
-                  style: Theme.of(context).textTheme.headlineSmall,
+    return BlocBuilder<CommentsBloc, CommentsState>(
+      builder: (context, state) {
+        if (state is CommentLoaded) {
+          // Jika komentar kosong, tampilkan pesan bahwa tidak ada komentar
+          if (state.comments.isEmpty) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.4,
+              maxChildSize: 0.6,
+              minChildSize: 0.4,
+              builder: (_, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Center(
+                    child: Text(
+                      'Tidak ada komentar.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+
+          // Jika ada komentar, tampilkan komentar seperti biasa
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.6,
+            maxChildSize: 1,
+            minChildSize: 0.4,
+            builder: (_, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Komentar',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 10),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: state.comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = state.comments[index];
+                          return _buildCommentItem(context, comment, index);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    final comment = comments[index];
-                    return _buildCommentItem(context, comment, index);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+              );
+            },
+          );
+        } else {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.4,
+            maxChildSize: 0.6,
+            minChildSize: 0.4,
+            builder: (_, scrollController) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          );
+        }
       },
     );
   }
 
   Widget _buildCommentItem(
-      BuildContext context, Map<String, dynamic> comment, int commentIndex) {
-    final replies = comment['replies'] as List<dynamic>;
+      BuildContext context, Comment comment, int commentIndex) {
+    final replies = comment.replies;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,7 +111,7 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             backgroundImage: AssetImage('assets/user.jpg'),
           ),
           title: Text(
-            comment['user'],
+            comment.user.name,
             style: Theme.of(context)
                 .textTheme
                 .bodyLarge!
@@ -149,12 +121,12 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                comment['comment'],
+                comment.content,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 5),
               Text(
-                comment['time'],
+                timeago.format(comment.createdAt),
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall!
@@ -253,7 +225,7 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                     backgroundImage: AssetImage('assets/user.jpg'),
                   ),
                   title: Text(
-                    reply['user'],
+                    reply.user.name,
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium!
@@ -263,12 +235,12 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        reply['comment'],
+                        reply.content,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        reply['time'],
+                        timeago.format(reply.createdAt),
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                             color: Theme.of(context).colorScheme.onSecondary),
                       ),
@@ -291,6 +263,39 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             ),
           ),
       ],
+    );
+  }
+
+  void _showReplyDialog(BuildContext context, int commentIndex) {
+    final TextEditingController replyController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Balas Komentar'),
+          content: TextField(
+            controller: replyController,
+            decoration: const InputDecoration(hintText: 'Tulis balasan Anda'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (replyController.text.isNotEmpty) {
+                  // implement add reply
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Kirim'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

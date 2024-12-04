@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:hiswana_migas/core/exaption.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/auth/data/models/kota_model.dart';
@@ -12,7 +13,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> getUserProfile(String userId);
   Future<UserModel> login(String email, String password);
   Future<UserModel> register(String name, String email, String password,
-      String provinceCode, String cityCode, String profilePhoto);
+      String provinceCode, String cityCode, File? profilePhoto);
   Future<List<ProvinsiEntities>> getProvinsi();
   Future<List<KotaEntities>> getKota(String provinsiCode);
 }
@@ -31,9 +32,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> getUserProfile(String userId) async {
     try {
-      final token = await tokenLocalDataSource
-          .getToken(); // Ensure this gets the token correctly
-      // Debugging the token value
+      final token = await tokenLocalDataSource.getToken();
 
       final response = await client.get(
         Uri.parse('${baseUrl}profile'),
@@ -43,7 +42,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'Authorization': 'Bearer $token',
         },
       );
-
       if (response.statusCode == 200) {
         return UserModel.fromJson(json.decode(response.body));
       } else {
@@ -52,7 +50,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (e) {
       // Log any exceptions
-      throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
+      throw ServerException('Gagal mendapatkan data user, $e');
     }
   }
 
@@ -108,26 +106,36 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> register(String name, String email, String password,
-      String provinceCode, String cityCode, String profilePhoto) async {
+      String provinceCode, String cityCode, File? profilePhoto) async {
     try {
-      final response = await client.post(
-        Uri.parse('${baseUrl}register'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-          'province_code': provinceCode,
-          'city_code': cityCode,
-          'profile_photo': profilePhoto,
-        }),
-      );
-      print(response.body);
-      print(response.statusCode);
-      if (response.statusCode == 200) {
+      // Buat request multipart
+      final uri = Uri.parse('${baseUrl}register');
+      final request = http.MultipartRequest('POST', uri);
+
+      // Tambahkan field
+      request.fields['name'] = name;
+      request.fields['email'] = email;
+      request.fields['password'] = password;
+      request.fields['password_confirmation'] = password;
+      request.fields['province_code'] = provinceCode;
+      request.fields['city_code'] = cityCode;
+
+      // Tambahkan file jika ada
+      if (profilePhoto != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profile_photo',
+          profilePhoto.path,
+        ));
+      }
+
+      // Set header
+      request.headers['Accept'] = 'application/json';
+
+      // Kirim request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201) {
         return UserModel.fromJson(json.decode(response.body));
       } else {
         throw ServerException('Gagal registrasi, silahkan coba lagi');

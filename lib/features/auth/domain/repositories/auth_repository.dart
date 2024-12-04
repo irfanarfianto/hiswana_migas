@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:hiswana_migas/core/failure.dart';
 import 'package:hiswana_migas/features/auth/domain/entities/kota_entities.dart';
@@ -13,7 +15,7 @@ abstract class AuthRepository {
     String password,
     String provinceCode,
     String cityCode,
-    String? profilePhoto,
+    File? profilePhoto,
   );
 
   Future<Either<Failure, List<ProvinsiEntities>>> getProvinsi();

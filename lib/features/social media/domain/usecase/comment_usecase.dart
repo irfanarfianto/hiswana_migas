@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:hiswana_migas/core/failure.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/comment_entity.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/comment_repository.dart';
 
@@ -6,7 +8,7 @@ class CommentUseCase {
 
   CommentUseCase(this.commentRepository);
 
-  Future<List<Comment>> getComments(int postId) async {
+  Future<Either<Failure, List<Comment>>> execute(int postId) async {
     return await commentRepository.getComments(postId);
   }
 

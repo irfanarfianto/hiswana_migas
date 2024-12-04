@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:hiswana_migas/features/auth/presentation/bloc/auth/auth_bloc.dar
 import 'package:hiswana_migas/features/auth/presentation/bloc/kota/kota_bloc.dart';
 import 'package:hiswana_migas/features/auth/presentation/bloc/provkot/provinsi_bloc.dart';
 import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/comments/comments_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
@@ -19,6 +21,10 @@ import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   timeago.setLocaleMessages('id', timeago.IdMessages());
   await dotenv.load(fileName: ".env");
   await di.init();
@@ -57,6 +63,11 @@ class MyApp extends StatelessWidget {
           create: (_) => PostBloc(
             getPostsUseCase: di.sl(),
             createPostUseCase: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => CommentsBloc(
+            getComments: di.sl(),
           ),
         ),
         BlocProvider(

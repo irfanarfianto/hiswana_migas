@@ -9,8 +9,11 @@ import 'package:hiswana_migas/features/auth/domain/usecase/get_user_profile_usec
 import 'package:hiswana_migas/features/auth/domain/usecase/login_usecase.dart';
 import 'package:hiswana_migas/features/auth/domain/usecase/register_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/data/datasources/post_remote_data_source.dart';
+import 'package:hiswana_migas/features/social%20media/data/repositories/comments_repository_impl.dart';
 import 'package:hiswana_migas/features/social%20media/data/repositories/post_repository_impl.dart';
+import 'package:hiswana_migas/features/social%20media/domain/repositories/comment_repository.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/post_repository.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/comment_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/create_post_use_case.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/delete_post_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/get_posts_usecase.dart';
@@ -40,6 +43,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CreatePostUseCase(sl()));
   sl.registerLazySingleton(() => LikePostUsecase(sl()));
   sl.registerLazySingleton(() => DeletePostUsecase(sl()));
+  sl.registerLazySingleton(() => CommentUseCase(sl()));
 
   // Registering Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -47,7 +51,9 @@ Future<void> init() async {
   // Post Repositories
   sl.registerLazySingleton<PostRepository>(
       () => PostRepositoryImpl(remoteDataSource: sl()));
-
+// comment repository
+  sl.registerLazySingleton<CommentRepository>(
+      () => CommentsRepositoryImpl(remoteDataSource: sl()));
   // Registering Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(
       client: sl(), baseUrl: baseUrl, tokenLocalDataSource: sl()));

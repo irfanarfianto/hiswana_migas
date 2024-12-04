@@ -8,18 +8,28 @@ part 'user_state.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
   final GetUserProfileUseCase getUserInfo;
+
   UserBloc({
     required this.getUserInfo,
   }) : super(UserInitial()) {
-    on<GetUser>((event, emit) async {
+    on<GetUserEvent>((event, emit) async {
       emit(UserLoading());
       try {
         final result = await getUserInfo.execute(event.token);
+        print("API Result: $result"); // Debugging: print result
         emit(result.fold(
-          (failure) => UserError(failure.message),
-          (user) => UserLoaded(user),
+          (failure) {
+            print(
+                "Error: ${failure.message}"); // Debugging: print error message
+            return UserError(failure.message);
+          },
+          (user) {
+            print("User Loaded: ${user.name}"); // Debugging: print user info
+            return UserLoaded(user);
+          },
         ));
       } catch (e) {
+        print("Exception: $e"); // Debugging: print exception
         emit(UserError(e.toString()));
       }
     });

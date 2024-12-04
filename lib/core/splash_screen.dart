@@ -32,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token == null || token.isEmpty) {
       context.pushReplacementNamed('welcome1');
     } else {
-      context.pushReplacementNamed('beranda');
+      context.pushReplacementNamed('home');
     }
   }
 

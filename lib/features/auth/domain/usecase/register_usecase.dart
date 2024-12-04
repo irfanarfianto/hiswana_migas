@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:hiswana_migas/core/failure.dart';
 import 'package:hiswana_migas/features/auth/domain/entities/user_entities.dart';
@@ -14,9 +16,9 @@ class RegisterUseCase {
     String password,
     String provinceCode,
     String cityCode,
-    String? profilePhoto,
+    File? profilePhoto,
   ) {
     return repository.register(
-        name, email, password, provinceCode, cityCode, profilePhoto!);
+        name, email, password, provinceCode, cityCode, profilePhoto);
   }
 }

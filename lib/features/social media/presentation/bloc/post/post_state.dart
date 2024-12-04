@@ -38,24 +38,3 @@ class PostCreated extends PostState {
   @override
   List<Object> get props => [posts];
 }
-
-// State untuk memuat komentar
-class CommentLoading extends PostState {}
-
-// State untuk menampilkan komentar yang dimuat
-class CommentLoaded extends PostState {
-  final List<CommentModel> comments;
-  const CommentLoaded(this.comments);
-
-  @override
-  List<Object> get props => [comments];
-}
-
-// State jika ada error saat memuat komentar
-class CommentError extends PostState {
-  final String message;
-  const CommentError(this.message);
-
-  @override
-  List<Object> get props => [message];
-}
