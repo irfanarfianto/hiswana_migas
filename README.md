@@ -1,16 +1,12 @@
 # hiswana_migas
 
-A new Flutter project.
+![Screenshot_20241205-050211](https://github.com/user-attachments/assets/6879f1f5-913a-4e4f-b40f-45d591b3fd35)
 
-## Getting Started
+![Screenshot_20241205-050224](https://github.com/user-attachments/assets/2be001f0-18b3-45c3-aced-2afee8c17145)
 
-This project is a starting point for a Flutter application.
+![Screenshot_20241205-050129](https://github.com/user-attachments/assets/00fc54bb-f807-4280-a3e1-0ef40a4bb4c6)
 
-A few resources to get you started if this is your first Flutter project:
+![Screenshot_20241205-050138](https://github.com/user-attachments/assets/7783c78e-2973-4384-9b97-aa1c27e44490)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![Screenshot_20241205-050145](https://github.com/user-attachments/assets/d43c754e-f447-44f7-ba16-c5434c32b0ca)
+![Screenshot_20241205-050159](https://github.com/user-attachments/assets/f286b1bb-1c1f-41ea-bf12-fc99404de813)
