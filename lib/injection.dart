@@ -14,10 +14,13 @@ import 'package:hiswana_migas/features/social%20media/data/repositories/post_rep
 import 'package:hiswana_migas/features/social%20media/domain/repositories/comment_repository.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/post_repository.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/comment_usecase.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/create_comment_usecsae.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/create_post_use_case.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/delete_comment.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/delete_post_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/get_posts_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/like_post_usecase.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/reply_usecase.dart';
 import 'package:http/http.dart' as http;
 import 'package:get_it/get_it.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -44,6 +47,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LikePostUsecase(sl()));
   sl.registerLazySingleton(() => DeletePostUsecase(sl()));
   sl.registerLazySingleton(() => CommentUseCase(sl()));
+  sl.registerLazySingleton(() => CreateCommentUsecase(sl()));
+  sl.registerLazySingleton(() => ReplyCommentUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteComment(sl()));
 
   // Registering Repositories
   sl.registerLazySingleton<AuthRepository>(

@@ -22,3 +22,4 @@ class DeletePostError extends DeleteState {
 
   const DeletePostError(this.error);
 }
+

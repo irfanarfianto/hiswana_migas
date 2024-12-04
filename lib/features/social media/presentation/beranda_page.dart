@@ -142,7 +142,6 @@ class _BerandaPageState extends State<BerandaPage> {
             ),
             BlocBuilder<PostBloc, PostState>(
               builder: (context, state) {
-                print(state);
                 if (state is PostLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -162,7 +161,7 @@ class _BerandaPageState extends State<BerandaPage> {
                     ),
                   );
                 }
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               },
             )
           ]),

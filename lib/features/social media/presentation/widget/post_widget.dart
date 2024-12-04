@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/widget/delete_confirm.dart';
 import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:readmore/readmore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -81,101 +83,92 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _buildPopupMenu(BuildContext context) {
-    return BlocListener<DeleteCubit, DeleteState>(
-      listener: (context, state) {
-        if (state is DeletePostLoading) {
-          showDialog(
-            context: context,
-            builder: (_) => const Center(child: CircularProgressIndicator()),
-          );
-        } else if (state is DeletePostError) {
-          GoRouter.of(context).pop(true);
-          showToast(message: 'Gagal menghapus post');
-        } else if (state is DeletePostSuccess) {
-          GoRouter.of(context).pop(true);
-          BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
-          showToast(message: 'Berhasil menghapus post');
-        }
-      },
-      child: PopupMenuButton<String>(
-        icon: Icon(
-          Icons.more_vert,
-          color: Theme.of(context).colorScheme.onSecondary,
-        ),
-        onSelected: (value) {
-          if (value == 'edit') {
-          } else if (value == 'hapus') {
-            _showDeleteConfirmationDialog(context, post.id);
+    return BlocListener<DeletePostCubit, DeleteState>(
+        listener: (context, state) {
+          if (state is DeletePostLoading) {
+            showDialog(
+              context: context,
+              builder: (_) => const Center(child: CircularProgressIndicator()),
+            );
+          } else if (state is DeletePostError) {
+            GoRouter.of(context).pop(true);
+            showToast(message: 'Gagal menghapus post');
+          } else if (state is DeletePostSuccess) {
+            GoRouter.of(context).pop(true);
+            BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
+            showToast(message: 'Berhasil menghapus post');
           }
         },
-        itemBuilder: (context) {
-          return [
-            PopupMenuItem<String>(
-              onTap: () => context.pushNamed(
-                'edit-post',
-                extra: post,
-              ),
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.edit,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onSecondary,
+        child: PopupMenuButton<String>(
+          icon: Icon(
+            Icons.more_vert,
+            color: Theme.of(context).colorScheme.onSecondary,
+          ),
+          onSelected: (value) {
+            if (value == 'edit') {
+            } else if (value == 'hapus') {
+              showDialog(
+                context: context,
+                builder: (context) => DeleteConfirmationDialog(postId: post.id),
+              );
+            } else if (value == 'bagikan') {
+              // TODO: tambahkan fungsi bagikan
+            }
+          },
+          itemBuilder: (context) {
+            final user = (context.read<UserBloc>().state as UserLoaded).user;
+            return [
+              if (user.uniqueNumber == post.user.uniqueNumber)
+                PopupMenuItem<String>(
+                  onTap: () => context.pushNamed(
+                    'edit-post',
+                    extra: post,
                   ),
-                  const SizedBox(width: 5),
-                  const Text('Edit'),
-                ],
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'hapus',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.delete,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.error,
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                      const SizedBox(width: 5),
+                      const Text('Edit'),
+                    ],
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Hapus',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                ),
+              if (user.uniqueNumber == post.user.uniqueNumber)
+                PopupMenuItem<String>(
+                  value: 'hapus',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: 5),
+                      const Text('Hapus'),
+                    ],
+                  ),
+                ),
+              PopupMenuItem<String>(
+                value: 'bagikan',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.share,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 5),
+                    const Text('Bagikan'),
+                  ],
+                ),
               ),
-            ),
-          ];
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirmationDialog(BuildContext context, int postId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Konfirmasi Penghapusan'),
-          content: const Text('Apakah Anda yakin ingin menghapus post ini?'),
-          actions: [
-            TextButton(
-              onPressed: () => context.pop(),
-              child: const Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
-                context.read<DeleteCubit>().deletePost(postId);
-                context.pop(true);
-              },
-              child: const Text('Hapus'),
-            ),
-          ],
-        );
-      },
-    );
+            ];
+          },
+        ));
   }
 
   Widget _buildPostContent(BuildContext context) {
@@ -289,7 +282,7 @@ class PostWidget extends StatelessWidget {
                 ),
           ),
         ),
-        if (post.photos.isNotEmpty || post.comments.isNotEmpty)
+        if (post.photos.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ReadMoreText(

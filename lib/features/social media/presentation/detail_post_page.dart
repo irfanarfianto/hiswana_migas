@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/comment_widget.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/widget/delete_confirm.dart';
 import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:readmore/readmore.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -46,7 +49,8 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 onTap: () {},
                 child: CircleAvatar(
                   radius: 20,
-                  backgroundImage: NetworkImage('${post.user.profilePhoto}'),
+                  backgroundImage: NetworkImage(
+                      '${dotenv.env['APP_URL']}${post.user.profilePhoto}'),
                 ),
               ),
               title: Text(
@@ -82,42 +86,65 @@ class _DetailPostPageState extends State<DetailPostPage> {
                 ),
                 onSelected: (value) {
                   if (value == 'edit') {
-                    // implement edit comment
                   } else if (value == 'hapus') {
-                    // implement delete comment
+                    showDialog(
+                      context: context,
+                      builder: (context) =>
+                          DeleteConfirmationDialog(postId: post.id),
+                    );
+                  } else if (value == 'bagikan') {
+                    // TODO: tambahkan fungsi bagikan
                   }
                 },
                 itemBuilder: (context) {
+                  final user =
+                      (context.read<UserBloc>().state as UserLoaded).user;
                   return [
+                    if (user.uniqueNumber == post.user.uniqueNumber)
+                      PopupMenuItem<String>(
+                        onTap: () => context.pushNamed(
+                          'edit-post',
+                          extra: post,
+                        ),
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.onSecondary,
+                            ),
+                            const SizedBox(width: 5),
+                            const Text('Edit'),
+                          ],
+                        ),
+                      ),
+                    if (user.uniqueNumber == post.user.uniqueNumber)
+                      PopupMenuItem<String>(
+                        value: 'hapus',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 5),
+                            const Text('Hapus'),
+                          ],
+                        ),
+                      ),
                     PopupMenuItem<String>(
-                      value: 'edit',
+                      value: 'bagikan',
                       child: Row(
                         children: [
                           Icon(
-                            Icons.edit,
+                            Icons.share,
                             size: 20,
                             color: Theme.of(context).colorScheme.onSecondary,
                           ),
                           const SizedBox(width: 5),
-                          const Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'hapus',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Hapus',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error),
-                          ),
+                          const Text('Bagikan'),
                         ],
                       ),
                     ),
@@ -198,7 +225,7 @@ class _DetailPostPageState extends State<DetailPostPage> {
                                 showDragHandle: true,
                                 isScrollControlled: true,
                                 builder: (context) =>
-                                    CommentsWidget(postId: post.id),
+                                    CommentsWidget(postId: post.id, ),
                               );
                             },
                             icon: const FaIcon(
@@ -227,27 +254,28 @@ class _DetailPostPageState extends State<DetailPostPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(post.caption ?? '',
                           style: Theme.of(context).textTheme.bodyMedium)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        showDragHandle: true,
-                        isScrollControlled: true,
-                        builder: (context) => CommentsWidget(
-                          postId: post.id,
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Lihat semua ${post.comments.length} komentar',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.onSecondary,
+                if (post.comments.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: InkWell(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          showDragHandle: true,
+                          isScrollControlled: true,
+                          builder: (context) => CommentsWidget(
+                            postId: post.id,
                           ),
+                        );
+                      },
+                      child: Text(
+                        'Lihat semua ${post.comments.length} komentar',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: Theme.of(context).colorScheme.onSecondary,
+                            ),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ],

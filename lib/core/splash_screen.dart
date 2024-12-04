@@ -19,7 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _tokenLocalDataSource = TokenLocalDataSource(const FlutterSecureStorage());
-    _navigateToNextPage();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateToNextPage();
+    });
   }
 
   void _navigateToNextPage() async {
@@ -28,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final token = await _tokenLocalDataSource.getToken();
+    if (!mounted) return;
 
     if (token == null || token.isEmpty) {
       context.pushReplacementNamed('welcome1');

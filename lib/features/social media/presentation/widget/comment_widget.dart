@@ -1,7 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hiswana_migas/features/social%20media/domain/entities/comment_entity.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/data/models/comment_model.dart';
+import 'package:hiswana_migas/features/social%20media/domain/entities/detail_comment_entity.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/del_comment/delete_comment_cubit.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/reply/reply_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/comments/comments_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/widget/form_comment_widget.dart';
+import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class CommentsWidget extends StatefulWidget {
@@ -14,6 +23,8 @@ class CommentsWidget extends StatefulWidget {
 }
 
 class _CommentsWidgetState extends State<CommentsWidget> {
+  final TextEditingController postCommentController = TextEditingController();
+  final TextEditingController replyController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -25,60 +36,126 @@ class _CommentsWidgetState extends State<CommentsWidget> {
     return BlocBuilder<CommentsBloc, CommentsState>(
       builder: (context, state) {
         if (state is CommentLoaded) {
-          // Jika komentar kosong, tampilkan pesan bahwa tidak ada komentar
-          if (state.comments.isEmpty) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.4,
-              maxChildSize: 0.6,
-              minChildSize: 0.4,
-              builder: (_, scrollController) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Center(
-                    child: Text(
-                      'Tidak ada komentar.',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
+          if (state.getComments.isEmpty) {
+            return Stack(
+              children: [
+                DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: 0.4,
+                  maxChildSize: 0.6,
+                  minChildSize: 0.4,
+                  builder: (_, scrollController) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Center(
+                        child: Text(
+                          'Tidak ada komentar.',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 0,
+                  right: 0,
+                  child: CommentInput(
+                    controller: postCommentController,
+                    onSend: () {
+                      if (postCommentController.text.isNotEmpty) {
+                        final comment = CommentModel(
+                          content: postCommentController.text,
+                          postId: widget.postId,
+                        );
+                        BlocProvider.of<CommentsBloc>(context).add(AddComment(
+                          postId: widget.postId,
+                          comment: comment,
+                        ));
+
+                        showToast(message: 'Komentar berhasil dibuat');
+                        postCommentController.clear();
+                      } else {
+                        showToast(message: 'Komentar tidak boleh kosong');
+                      }
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             );
           }
 
-          // Jika ada komentar, tampilkan komentar seperti biasa
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.6,
-            maxChildSize: 1,
-            minChildSize: 0.4,
-            builder: (_, scrollController) {
-              return SingleChildScrollView(
-                controller: scrollController,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Komentar',
-                        style: Theme.of(context).textTheme.headlineSmall,
+          final sortedComments = List<DetailComment>.from(state.getComments)
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          return Stack(
+            children: [
+              DraggableScrollableSheet(
+                expand: false,
+                initialChildSize: 0.6,
+                maxChildSize: 1,
+                minChildSize: 0.4,
+                builder: (_, scrollController) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    controller: scrollController,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Komentar',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 10),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: sortedComments.length,
+                            itemBuilder: (context, index) {
+                              final comment = sortedComments[index];
+                              return Column(
+                                children: [
+                                  _buildCommentItem(context, comment),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 80),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: state.comments.length,
-                        itemBuilder: (context, index) {
-                          final comment = state.comments[index];
-                          return _buildCommentItem(context, comment, index);
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 0,
+                right: 0,
+                child: CommentInput(
+                  controller: postCommentController,
+                  onSend: () {
+                    if (postCommentController.text.isNotEmpty) {
+                      final comment = CommentModel(
+                        content: postCommentController.text,
+                        postId: widget.postId,
+                      );
+
+                      BlocProvider.of<CommentsBloc>(context).add(AddComment(
+                        postId: widget.postId,
+                        comment: comment,
+                      ));
+
+                      showToast(message: 'Komentar berhasil dibuat');
+                      postCommentController.clear();
+                    } else {
+                      showToast(message: 'Komentar tidak boleh kosong');
+                    }
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         } else {
           return DraggableScrollableSheet(
@@ -97,18 +174,21 @@ class _CommentsWidgetState extends State<CommentsWidget> {
     );
   }
 
-  Widget _buildCommentItem(
-      BuildContext context, Comment comment, int commentIndex) {
+  Widget _buildCommentItem(BuildContext context, DetailComment comment) {
     final replies = comment.replies;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
           contentPadding: const EdgeInsets.all(0),
           isThreeLine: true,
-          leading: const CircleAvatar(
+          leading: CircleAvatar(
             radius: 20,
-            backgroundImage: AssetImage('assets/user.jpg'),
+            backgroundImage: comment.user.profilePhoto == 'default.jpg'
+                ? const AssetImage('assets/user.jpg')
+                : CachedNetworkImageProvider(
+                    '${dotenv.env['APP_URL']}${comment.user.profilePhoto}'),
           ),
           title: Text(
             comment.user.name,
@@ -126,7 +206,7 @@ class _CommentsWidgetState extends State<CommentsWidget> {
               ),
               const SizedBox(height: 5),
               Text(
-                timeago.format(comment.createdAt),
+                timeago.format(comment.createdAt, locale: 'id'),
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall!
@@ -134,7 +214,7 @@ class _CommentsWidgetState extends State<CommentsWidget> {
               ),
               InkWell(
                 onTap: () {
-                  _showReplyDialog(context, commentIndex);
+                  _showReplyDialog(context, comment);
                 },
                 child: Text(
                   'balas',
@@ -152,53 +232,40 @@ class _CommentsWidgetState extends State<CommentsWidget> {
               color: Theme.of(context).colorScheme.onSecondary,
             ),
             onSelected: (value) {
-              if (value == 'edit') {
-                // implement edit comment
-              } else if (value == 'hapus') {
-                // implement delete comment
+              if (value == 'hapus') {
+                context.read<DeleteCommentCubit>().deleteComment(comment.id);
+                BlocProvider.of<CommentsBloc>(context)
+                    .add(GetComments(widget.postId));
+                showToast(message: 'Komentar berhasil dihapus');
               }
             },
             itemBuilder: (context) {
+              final user = (context.read<UserBloc>().state as UserLoaded).user;
               return [
-                PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.edit,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSecondary,
-                      ),
-                      const SizedBox(width: 5),
-                      const Text('Edit'),
-                    ],
+                if (user.uniqueNumber == comment.user.uniqueNumber)
+                  PopupMenuItem<String>(
+                    value: 'hapus',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Hapus',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'hapus',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Hapus',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error),
-                      ),
-                    ],
-                  ),
-                ),
               ];
             },
           ),
         ),
-
-        // ExpansionTile untuk balasan
-        if (replies.isNotEmpty)
+        if (replies!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(left: 40),
             child: ExpansionTile(
@@ -220,9 +287,12 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                 return ListTile(
                   contentPadding: const EdgeInsets.all(0),
                   isThreeLine: true,
-                  leading: const CircleAvatar(
+                  leading: CircleAvatar(
                     radius: 15,
-                    backgroundImage: AssetImage('assets/user.jpg'),
+                    backgroundImage: reply.user.profilePhoto == 'default.jpg'
+                        ? const AssetImage('assets/user.jpg')
+                        : CachedNetworkImageProvider(
+                            '${dotenv.env['APP_URL']}${reply.user.profilePhoto}'),
                   ),
                   title: Text(
                     reply.user.name,
@@ -240,13 +310,13 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        timeago.format(reply.createdAt),
+                        timeago.format(reply.createdAt, locale: 'id'),
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                             color: Theme.of(context).colorScheme.onSecondary),
                       ),
                       InkWell(
                         onTap: () {
-                          _showReplyDialog(context, commentIndex);
+                          _showReplyDialog(context, comment);
                         },
                         child: Text(
                           'balas',
@@ -266,8 +336,8 @@ class _CommentsWidgetState extends State<CommentsWidget> {
     );
   }
 
-  void _showReplyDialog(BuildContext context, int commentIndex) {
-    final TextEditingController replyController = TextEditingController();
+  void _showReplyDialog(BuildContext context, DetailComment comment) {
+    final commentId = comment.id;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -275,21 +345,37 @@ class _CommentsWidgetState extends State<CommentsWidget> {
           title: const Text('Balas Komentar'),
           content: TextField(
             controller: replyController,
-            decoration: const InputDecoration(hintText: 'Tulis balasan Anda'),
+            decoration: InputDecoration(
+                hintText: 'Tulis balasan Anda untuk ${comment.user.name}'),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                context.pop();
               },
               child: const Text('Batal'),
             ),
             TextButton(
               onPressed: () {
                 if (replyController.text.isNotEmpty) {
-                  // implement add reply
+                  final comment = CommentModel(
+                    content: replyController.text,
+                  );
+                  BlocProvider.of<ReplyBloc>(context).add(ReplyComment(
+                    postId: widget.postId,
+                    commentId: commentId,
+                    comment: comment,
+                  ));
+
+                  BlocProvider.of<CommentsBloc>(context)
+                      .add(GetComments(widget.postId));
+
+                  showToast(message: 'Komentar berhasil dibuat');
+                  replyController.clear();
+                  context.pop();
+                } else {
+                  showToast(message: 'Komentar tidak boleh kosong');
                 }
-                Navigator.pop(context);
               },
               child: const Text('Kirim'),
             ),

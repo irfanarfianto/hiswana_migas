@@ -41,7 +41,6 @@ class _HomePageState extends State<HomePage> {
         body: BlocBuilder<UserBloc, UserState>(
           builder: (context, state) {
             // debugging
-            print(state);
             if (state is UserLoading) {
               return const Center(child: CircularProgressIndicator());
             }

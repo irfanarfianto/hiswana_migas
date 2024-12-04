@@ -16,20 +16,18 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(UserLoading());
       try {
         final result = await getUserInfo.execute(event.token);
-        print("API Result: $result"); // Debugging: print result
+
         emit(result.fold(
           (failure) {
-            print(
-                "Error: ${failure.message}"); // Debugging: print error message
+            // Debugging: print error message
             return UserError(failure.message);
           },
           (user) {
-            print("User Loaded: ${user.name}"); // Debugging: print user info
+            // Debugging: print user info
             return UserLoaded(user);
           },
         ));
       } catch (e) {
-        print("Exception: $e"); // Debugging: print exception
         emit(UserError(e.toString()));
       }
     });

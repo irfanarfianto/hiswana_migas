@@ -14,3 +14,12 @@ final class GetComments extends CommentsEvent {
   @override
   List<Object> get props => [postId];
 }
+
+final class AddComment extends CommentsEvent {
+  final int postId;
+  final CommentModel comment;
+  const AddComment({required this.postId, required this.comment});
+
+  @override
+  List<Object> get props => [comment, postId];
+}

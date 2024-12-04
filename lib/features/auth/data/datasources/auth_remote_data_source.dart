@@ -42,6 +42,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'Authorization': 'Bearer $token',
         },
       );
+
       if (response.statusCode == 200) {
         return UserModel.fromJson(json.decode(response.body));
       } else {

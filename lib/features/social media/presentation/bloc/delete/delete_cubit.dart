@@ -1,13 +1,15 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:hiswana_migas/features/social%20media/domain/repositories/comment_repository.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/post_repository.dart';
 
 part 'delete_state.dart';
 
-class DeleteCubit extends Cubit<DeleteState> {
+class DeletePostCubit extends Cubit<DeleteState> {
   final PostRepository postRepository;
+  // final CommentRepository commentRepository;
 
-  DeleteCubit(this.postRepository) : super(DeleteInitial());
+  DeletePostCubit(this.postRepository) : super(DeleteInitial());
 
   Future<void> deletePost(int postId) async {
     emit(DeletePostLoading());
@@ -15,4 +17,11 @@ class DeleteCubit extends Cubit<DeleteState> {
     result.fold((failure) => emit(DeletePostError(failure.message)),
         (_) => emit(DeletePostSuccess(postId)));
   }
+
+  // Future<void> deleteComment(int commentId) async {
+  //   emit(DeletePostLoading());
+  //   final result = await commentRepository.deleteComment(commentId);
+  //   result.fold((failure) => emit(DeleteCommentsError(failure.message)),
+  //       (_) => emit(DeleteCommentsSuccess(commentId)));
+  // }
 }

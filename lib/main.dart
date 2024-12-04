@@ -8,10 +8,13 @@ import 'package:hiswana_migas/features/auth/presentation/bloc/auth/auth_bloc.dar
 import 'package:hiswana_migas/features/auth/presentation/bloc/kota/kota_bloc.dart';
 import 'package:hiswana_migas/features/auth/presentation/bloc/provkot/provinsi_bloc.dart';
 import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/del_comment/delete_comment_cubit.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/reply/reply_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/comments/comments_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/reply/reply_bloc.dart';
 import 'package:hiswana_migas/features/theme/cubit/switch_theme_cubit.dart';
 import 'package:hiswana_migas/router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -68,6 +71,12 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => CommentsBloc(
             getComments: di.sl(),
+            postComments: di.sl(),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => ReplyBloc(
+            replyCommentUsecase: di.sl(),
           ),
         ),
         BlocProvider(
@@ -81,7 +90,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(create: (_) => LikesCubit(di.sl())),
-        BlocProvider(create: (_) => DeleteCubit(di.sl())),
+        BlocProvider(create: (_) => DeletePostCubit(di.sl())),
+        BlocProvider(create: (_) => DeleteCommentCubit(di.sl())),
       ],
       child: BlocBuilder<SwitchThemeCubit, SwitchThemeState>(
           builder: (context, themeState) {
