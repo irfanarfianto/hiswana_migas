@@ -6,6 +6,7 @@ import 'package:hiswana_migas/features/social%20media/domain/entities/detail_pos
 import 'package:hiswana_migas/features/social%20media/domain/entities/post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/create_post_use_case.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/get_posts_usecase.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/update_post_usecase.dart';
 
 part 'post_event.dart';
 part 'post_state.dart';
@@ -13,10 +14,12 @@ part 'post_state.dart';
 class PostBloc extends Bloc<PostEvent, PostState> {
   final GetPostsUseCase getPostsUseCase;
   final CreatePostUseCase createPostUseCase;
+  final UpdatePostUsecase updatePostUsecase;
 
   PostBloc({
     required this.getPostsUseCase,
     required this.createPostUseCase,
+    required this.updatePostUsecase,
   }) : super(PostInitial()) {
     on<GetPostsEvent>((event, emit) async {
       try {
@@ -43,6 +46,23 @@ class PostBloc extends Bloc<PostEvent, PostState> {
         );
       } catch (error) {
         emit(PostError(error.toString()));
+      }
+    });
+    on<UpdatePostEvent>((event, emit) async {
+      emit(UpdateLoading());
+      try {
+        final result = await updatePostUsecase.execute(
+          event.updatePost,
+          event.postId,
+        );
+        result.fold(
+          (failure) => emit(UpdatePostError(failure.message)),
+          (post) {
+            emit(UpdatePost([post]));
+          },
+        );
+      } catch (error) {
+        emit(UpdatePostError(error.toString()));
       }
     });
   }

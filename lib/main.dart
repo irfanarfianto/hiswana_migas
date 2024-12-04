@@ -14,7 +14,6 @@ import 'package:hiswana_migas/features/social%20media/presentation/bloc/comments
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/delete/delete_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/likes/likes_cubit.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
-import 'package:hiswana_migas/features/social%20media/presentation/bloc/reply/reply_bloc.dart';
 import 'package:hiswana_migas/features/theme/cubit/switch_theme_cubit.dart';
 import 'package:hiswana_migas/router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -66,6 +65,7 @@ class MyApp extends StatelessWidget {
           create: (_) => PostBloc(
             getPostsUseCase: di.sl(),
             createPostUseCase: di.sl(),
+            updatePostUsecase: di.sl(),
           ),
         ),
         BlocProvider(

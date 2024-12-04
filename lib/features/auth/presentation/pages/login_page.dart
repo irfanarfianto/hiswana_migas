@@ -74,123 +74,126 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: Form(
                 key: _formKey, // Tambahkan Form dan kunci
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Email',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          const SizedBox(height: 5),
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
-                              hintText: 'Masukkan Email',
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Email tidak boleh kosong';
-                              }
-                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                  .hasMatch(value)) {
-                                return 'Masukkan email yang valid';
-                              }
-                              return null;
-                            },
-                          ),
-                        ]),
-                    const SizedBox(height: 20),
-                    Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Kata Sandi',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          const SizedBox(height: 5),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _isPasswordHidden,
-                            decoration: InputDecoration(
-                              hintText: 'Masukkan Kata Sandi',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordHidden
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordHidden = !_isPasswordHidden;
-                                  });
-                                },
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Kata sandi tidak boleh kosong';
-                              }
-                              if (value.length < 6) {
-                                return 'Kata sandi harus lebih dari 6 karakter';
-                              }
-                              return null;
-                            },
-                          ),
-                        ]),
-                    const SizedBox(height: 25),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.tertiary,
-                      ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Lakukan login jika validasi berhasil
-                          context.read<AuthBloc>().add(LoginEvent(
-                                email: _emailController.text,
-                                password: _passwordController.text,
-                              ));
-                        }
-                      },
-                      child: const Text('Login'),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.onSecondary,
-                      ),
-                      onPressed: () {
-                        context.push('/reset-password');
-                      },
-                      child: const Text('Reset Password'),
-                    ),
-                    const SizedBox(height: 30),
-                    Center(
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          style: Theme.of(context).textTheme.bodyLarge,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const TextSpan(text: 'Belum punya akun? '),
-                            TextSpan(
-                              text: 'Masuk disini',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  context.push('/register');
-                                },
+                            Text(
+                              'Email',
+                              style: Theme.of(context).textTheme.bodyLarge,
                             ),
-                          ],
+                            const SizedBox(height: 5),
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: const InputDecoration(
+                                hintText: 'Masukkan Email',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Email tidak boleh kosong';
+                                }
+                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                    .hasMatch(value)) {
+                                  return 'Masukkan email yang valid';
+                                }
+                                return null;
+                              },
+                            ),
+                          ]),
+                      const SizedBox(height: 20),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kata Sandi',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: 5),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _isPasswordHidden,
+                              decoration: InputDecoration(
+                                hintText: 'Masukkan Kata Sandi',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordHidden
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordHidden = !_isPasswordHidden;
+                                    });
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Kata sandi tidak boleh kosong';
+                                }
+                                if (value.length < 6) {
+                                  return 'Kata sandi harus lebih dari 6 karakter';
+                                }
+                                return null;
+                              },
+                            ),
+                          ]),
+                      const SizedBox(height: 25),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.tertiary,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            // Lakukan login jika validasi berhasil
+                            context.read<AuthBloc>().add(LoginEvent(
+                                  email: _emailController.text,
+                                  password: _passwordController.text,
+                                ));
+                          }
+                        },
+                        child: const Text('Login'),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.onSecondary,
+                        ),
+                        onPressed: () {
+                          context.push('/reset-password');
+                        },
+                        child: const Text('Reset Password'),
+                      ),
+                      const SizedBox(height: 30),
+                      Center(
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.bodyLarge,
+                            children: [
+                              const TextSpan(text: 'Belum punya akun? '),
+                              TextSpan(
+                                text: 'Masuk disini',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    context.push('/register');
+                                  },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

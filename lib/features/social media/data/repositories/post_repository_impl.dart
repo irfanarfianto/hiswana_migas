@@ -34,6 +34,19 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<Either<Failure, Post>> updatePost(Post updatePost, int postId) async {
+    try {
+      final updatePostModel =
+          PostModel(caption: updatePost.caption!, photo: updatePost.photo!);
+      final response =
+          await remoteDataSource.updatePost(updatePostModel, postId);
+      return Right(response);
+    } catch (error) {
+      return Left(ServerFailure('Failed to update post: ${error.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> likePost(int postId) async {
     try {
       final response = await remoteDataSource.postLike(postId);

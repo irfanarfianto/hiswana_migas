@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +11,7 @@ import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dar
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/image_upload.dart';
 import 'package:hiswana_migas/features/social%20media/presentation/widget/post_widget.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
@@ -142,11 +145,78 @@ class _BerandaPageState extends State<BerandaPage> {
             ),
             BlocBuilder<PostBloc, PostState>(
               builder: (context, state) {
+                print(state);
                 if (state is PostLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                      child: Column(
+                    children: [
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16),
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.grey[300],
+                        ),
+                        title: Skeletonizer(
+                          enabled: true,
+                          child: Container(
+                            height: 12,
+                            width: 100,
+                            color: Colors.grey[300],
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Skeletonizer(
+                              enabled: true,
+                              child: Container(
+                                height: 10,
+                                width: 150,
+                                color: Colors.grey[300],
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Skeletonizer(
+                              enabled: true,
+                              child: Container(
+                                height: 10,
+                                width: 100,
+                                color: Colors.grey[300],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Skeletonizer(
+                          enabled: true,
+                          child: Container(
+                            height: 250,
+                            width: double.infinity,
+                            color: Colors.grey[300],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ));
                 }
                 if (state is PostError) {
-                  return Center(child: Text(state.message));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(state.message),
+                        TextButton(
+                          onPressed: () {
+                            context.read<PostBloc>().add(GetPostsEvent());
+                          },
+                          child: const Text('Refresh'),
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 if (state is PostLoaded) {
                   return Expanded(

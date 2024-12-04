@@ -18,24 +18,12 @@ class CreatePostEvent extends PostEvent {
   List<Object> get props => [postCreate];
 }
 
-class AddCommentEvent extends PostEvent {
+class UpdatePostEvent extends PostEvent {
   final int postId;
-  final String content;
-  final User user;
+  final PostModel updatePost;
 
-  const AddCommentEvent(
-      {required this.postId, required this.content, required this.user});
+  const UpdatePostEvent({required this.updatePost, required this.postId});
 
   @override
-  List<Object> get props => [postId, content, user];
-}
-
-class AddReplyEvent extends PostEvent {
-  final int commentId;
-  final String reply;
-
-  const AddReplyEvent({required this.commentId, required this.reply});
-
-  @override
-  List<Object> get props => [commentId, reply];
+  List<Object> get props => [updatePost];
 }

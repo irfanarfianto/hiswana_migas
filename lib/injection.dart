@@ -21,6 +21,7 @@ import 'package:hiswana_migas/features/social%20media/domain/usecase/delete_post
 import 'package:hiswana_migas/features/social%20media/domain/usecase/get_posts_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/like_post_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/reply_usecase.dart';
+import 'package:hiswana_migas/features/social%20media/domain/usecase/update_post_usecase.dart';
 import 'package:http/http.dart' as http;
 import 'package:get_it/get_it.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -44,6 +45,7 @@ Future<void> init() async {
   // Post Usecases
   sl.registerLazySingleton(() => GetPostsUseCase(sl()));
   sl.registerLazySingleton(() => CreatePostUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePostUsecase(sl()));
   sl.registerLazySingleton(() => LikePostUsecase(sl()));
   sl.registerLazySingleton(() => DeletePostUsecase(sl()));
   sl.registerLazySingleton(() => CommentUseCase(sl()));

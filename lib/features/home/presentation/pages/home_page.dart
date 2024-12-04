@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -40,7 +42,6 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         body: BlocBuilder<UserBloc, UserState>(
           builder: (context, state) {
-            // debugging
             if (state is UserLoading) {
               return const Center(child: CircularProgressIndicator());
             }

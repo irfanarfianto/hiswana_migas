@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:hiswana_migas/features/social%20media/domain/repositories/comment_repository.dart';
 import 'package:hiswana_migas/features/social%20media/domain/repositories/post_repository.dart';
 
 part 'delete_state.dart';

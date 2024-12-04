@@ -54,6 +54,7 @@ dependencies:
   provider: ^6.1.2
   readmore: ^3.0.0
   shared_preferences: ^2.3.3
+  skeletonizer: ^1.4.2
   sqflite: ^2.4.1
   timeago: ^3.7.0
 

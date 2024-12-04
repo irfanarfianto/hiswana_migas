@@ -13,6 +13,7 @@ abstract class PostRemoteDataSource {
   Future<List<DetailsPostModel>> getPosts();
   Future<List<DetailComment>> getComments(int postId);
   Future<PostModel> postCreate(PostModel postCreate);
+  Future<PostModel> updatePost(PostModel updatePost, int postId);
   Future<CommentModel> postComment(int postId, CommentModel postComment);
   Future<CommentModel> replyComment(int commentId, CommentModel postComment);
   Future<Either<Failure, void>> postLike(int postId);
@@ -131,6 +132,56 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     }
   }
 
+  @override
+  Future<PostModel> updatePost(PostModel updatePost, int postId) async {
+    final token = await tokenLocalDataSource.getToken();
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${baseUrl}posts/$postId'),
+    );
+
+    // Add headers
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $token';
+
+    // Tambahkan caption jika tidak null
+    if (updatePost.caption != null && updatePost.caption!.isNotEmpty) {
+      request.fields['caption'] = updatePost.caption!;
+    }
+
+    // Tambahkan foto jika tidak kosong
+    if (updatePost.photo != null && updatePost.photo!.isNotEmpty) {
+      for (var photoPath in updatePost.photo!) {
+        request.files.add(
+          await http.MultipartFile.fromPath('photo[]', photoPath),
+        );
+      }
+    }
+
+    // Validasi jika keduanya kosong
+    if ((updatePost.caption == null || updatePost.caption!.isEmpty) &&
+        (updatePost.photo == null || updatePost.photo!.isEmpty)) {
+      throw Exception('At least one of "caption" or "photo" must be provided.');
+    }
+
+    try {
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        var responseData = await response.stream.bytesToString();
+        final dynamic updatePostJson = json.decode(responseData);
+        return PostModel.fromJson(updatePostJson);
+      } else {
+        var errorResponse = await response.stream.bytesToString();
+        throw Exception(
+            'Failed to update post: ${response.statusCode} - ${response.reasonPhrase}, Response: $errorResponse');
+      }
+    } on Exception catch (e) {
+      throw Exception('Error update post: $e');
+    }
+  }
+
   // likes
   @override
   Future<Either<Failure, void>> postLike(int postId) async {
@@ -213,7 +264,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     request.body = json.encode({'content': postreplyComment.content});
     try {
       final response = await request.send();
-
 
       if (response.statusCode == 201) {
         final responseData = await response.stream.bytesToString();

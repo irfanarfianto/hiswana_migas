@@ -6,6 +6,7 @@ import 'package:hiswana_migas/features/social%20media/domain/entities/post_entit
 abstract class PostRepository {
   Future<Either<Failure, List<DetailPostEntity>>> getAllPosts();
   Future<Either<Failure, Post>> postCreate(Post postCreateModel);
+  Future<Either<Failure, Post>> updatePost(Post updatePostModel, int postId);
 
   Future<Either<Failure, void>> likePost(int postId);
   Future<Either<Failure, void>> deletePost(int postId);

@@ -1,11 +1,14 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, unnecessary_nullable_for_final_variable_declarations
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/features/social%20media/data/models/post_model.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
+import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -67,8 +70,15 @@ class _EditPostPageState extends State<EditPostPage> {
     );
 
     debugPrint("Payload before sending: ${postCreate.toJson()}");
-    // BlocProvider.of<PostBloc>(context)
-    //     .add(UpdatePostEvent(postId: widget.post.id, postCreate: postCreate));
+    try {
+      BlocProvider.of<PostBloc>(context)
+          .add(UpdatePostEvent(postId: widget.post.id, updatePost: postCreate));
+      BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
+      context.pop();
+      showToast(message: "Postingan berhasil diperbarui");
+    } on Exception {
+      showToast(message: "Gagal memperbarui postingan}");
+    }
   }
 
   @override

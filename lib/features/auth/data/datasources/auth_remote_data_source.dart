@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:hiswana_migas/core/exaption.dart';
@@ -41,17 +42,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      );
+      ).timeout(const Duration(seconds: 30)); // Timeout untuk request
 
       if (response.statusCode == 200) {
         return UserModel.fromJson(json.decode(response.body));
       } else {
         throw ServerException(
-            'Gagal mendapatkan data user, silahkan coba lagi');
+            'Gagal mendapatkan data user, status code: ${response.statusCode}');
       }
+    } on SocketException catch (e) {
+      // Menangani error jaringan
+      throw ServerException('Tidak dapat terhubung ke jaringan: $e');
+    } on TimeoutException catch (e) {
+      // Menangani timeout pada request
+      throw ServerException('Waktu request habis: $e');
+    } on HttpException catch (e) {
+      // Menangani error HTTP lainnya
+      throw ServerException('Kesalahan HTTP: $e');
+    } on FormatException catch (e) {
+      // Menangani error format data (misalnya kesalahan saat parsing JSON)
+      throw ServerException('Format data tidak valid: $e');
     } catch (e) {
-      // Log any exceptions
-      throw ServerException('Gagal mendapatkan data user, $e');
+      // Menangani error lainnya
+      throw ServerException('Terjadi kesalahan: $e');
     }
   }
 
