@@ -41,8 +41,8 @@ class _CommentsWidgetState extends State<CommentsWidget> {
               children: [
                 DraggableScrollableSheet(
                   expand: false,
-                  initialChildSize: 0.4,
-                  maxChildSize: 0.6,
+                  initialChildSize: 0.6,
+                  maxChildSize: 0.95,
                   minChildSize: 0.4,
                   builder: (_, scrollController) {
                     return Padding(
@@ -170,8 +170,8 @@ class _CommentsWidgetState extends State<CommentsWidget> {
         } else {
           return DraggableScrollableSheet(
             expand: false,
-            initialChildSize: 0.4,
-            maxChildSize: 0.6,
+            initialChildSize: 0.6,
+            maxChildSize: 0.95,
             minChildSize: 0.4,
             builder: (_, scrollController) {
               return const Center(
