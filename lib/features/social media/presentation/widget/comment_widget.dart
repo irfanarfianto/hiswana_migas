@@ -92,40 +92,50 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             children: [
               DraggableScrollableSheet(
                 expand: false,
-                initialChildSize: 0.6,
-                maxChildSize: 1,
+                initialChildSize: sortedComments.length > 6 ? 0.95 : 0.6,
+                maxChildSize: 0.95,
                 minChildSize: 0.4,
                 builder: (_, scrollController) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    controller: scrollController,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Komentar',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 10),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: sortedComments.length,
-                            itemBuilder: (context, index) {
-                              final comment = sortedComments[index];
-                              return Column(
-                                children: [
-                                  _buildCommentItem(context, comment),
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 80),
-                        ],
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Komentar',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          controller: scrollController,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: sortedComments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = sortedComments[index];
+                                    return Column(
+                                      children: [
+                                        _buildCommentItem(context, comment),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 80),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
