@@ -46,7 +46,20 @@ class _HomePageState extends State<HomePage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (state is UserError) {
-              return Center(child: Text(state.message));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(state.message),
+                    TextButton(
+                      onPressed: () {
+                        _loadUserInfo();
+                      },
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+              );
             }
             if (state is UserLoaded) {
               return SingleChildScrollView(
