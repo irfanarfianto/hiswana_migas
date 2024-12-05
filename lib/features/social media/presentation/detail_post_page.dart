@@ -224,8 +224,9 @@ class _DetailPostPageState extends State<DetailPostPage> {
                                 context: context,
                                 showDragHandle: true,
                                 isScrollControlled: true,
-                                builder: (context) =>
-                                    CommentsWidget(postId: post.id, ),
+                                builder: (context) => CommentsWidget(
+                                  postId: post.id,
+                                ),
                               );
                             },
                             icon: const FaIcon(

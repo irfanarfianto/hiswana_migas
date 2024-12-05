@@ -166,9 +166,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                       _images.removeAt(index);
                                     });
                                   },
-                                  child: CircleAvatar(
+                                  child: const CircleAvatar(
                                     backgroundColor: Colors.red,
-                                    child: const Icon(Icons.close,
+                                    child: Icon(Icons.close,
                                         size: 16, color: Colors.white),
                                   ),
                                 ),

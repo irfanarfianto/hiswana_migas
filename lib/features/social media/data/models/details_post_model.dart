@@ -34,6 +34,7 @@ class DetailsPostModel extends DetailPostEntity {
   }
 
   // Menambahkan toJson() untuk mengonversi objek ke JSON
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -59,6 +60,7 @@ class LikeModel extends Like {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -88,6 +90,7 @@ class CommentModelPost extends CommentPost {
   }
 
   // Menambahkan toJson() untuk mengonversi objek ke JSON
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,

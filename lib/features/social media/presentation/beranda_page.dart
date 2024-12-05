@@ -145,7 +145,6 @@ class _BerandaPageState extends State<BerandaPage> {
             ),
             BlocBuilder<PostBloc, PostState>(
               builder: (context, state) {
-                print(state);
                 if (state is PostLoading) {
                   return Center(
                       child: Column(

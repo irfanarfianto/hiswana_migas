@@ -23,15 +23,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> getUserProfile(String userId) async {
     try {
-      // Cek data lokal terlebih dahulu
       UserModel? localUser = await userDatabaseHelper.getUser();
       if (localUser != null) {
-        return Right(localUser); // Kembalikan data lokal jika ada
+        return Right(localUser);
       }
 
-      // Jika data lokal tidak ada, ambil dari server
       final user = await remoteDataSource.getUserProfile(userId);
-      await userDatabaseHelper.insertUser(user); // Simpan ke lokal
+      await userDatabaseHelper.insertUser(user);
 
       return Right(user);
     } on ServerException {
@@ -47,15 +45,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await remoteDataSource.login(email, password);
 
-      if (response != null) {
-        await userDatabaseHelper
-            .insertUser(response); // Simpan data user ke database lokal
-        return Right(response); // Kembalikan data user
-      } else {
-        return const Left(ServerFailure(
-            'Gagal login, silahkan cek kembali email dan password.'));
-      }
-    } catch (e) {
+      await userDatabaseHelper.insertUser(response);
+      return Right(response);
+        } catch (e) {
       return const Left(ServerFailure(
           'Gagal login, silahkan cek kembali email dan password.'));
     }
