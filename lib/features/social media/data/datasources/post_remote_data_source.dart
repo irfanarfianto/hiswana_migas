@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:hiswana_migas/core/failure.dart';
@@ -287,7 +288,8 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     request.headers['Authorization'] = 'Bearer $token';
 
     try {
-      final response = await request.send();
+      final response =
+          await request.send().timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
         return const Right(null);
       } else {
@@ -295,6 +297,8 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
         throw Exception(
             'Failed to delete comment: ${response.statusCode} - ${response.reasonPhrase}, Response: $errorResponse');
       }
+    } on TimeoutException {
+      throw Exception('Error deleting comment: Connection timed out');
     } on Exception catch (e) {
       throw Exception('Error deleting comment: $e');
     }
