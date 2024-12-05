@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, empty_catches
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -139,7 +140,8 @@ class _HomePageState extends State<HomePage> {
                                     },
                                     child: CircleAvatar(
                                       radius: 25,
-                                      backgroundImage: NetworkImage(
+                                      backgroundImage:
+                                          CachedNetworkImageProvider(
                                         '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
                                       ),
                                     ),

@@ -4,7 +4,7 @@ import 'package:hiswana_migas/features/auth/domain/entities/user_entities.dart';
 class Reply extends Equatable {
   final int id;
   final int postId;
-  final int? commentId;
+  final int? parentId;
   final String content;
   final DateTime createdAt;
   final User user;
@@ -12,7 +12,7 @@ class Reply extends Equatable {
   const Reply({
     required this.id,
     required this.postId,
-    this.commentId,
+    this.parentId,
     required this.content,
     required this.createdAt,
     required this.user,
@@ -22,7 +22,7 @@ class Reply extends Equatable {
   List<Object?> get props => [
         id,
         postId,
-        commentId,
+        parentId,
         content,
         createdAt,
         user,

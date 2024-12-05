@@ -299,6 +299,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       }
     } on TimeoutException {
       throw Exception('Error deleting comment: Connection timed out');
+    } on http.ClientException catch (e) {
+      if (e.message == 'Connection closed before full header was received') {
+        throw Exception(
+            'Error deleting comment: Connection closed before full header was received');
+      } else {
+        throw Exception('Error deleting comment: $e');
+      }
     } on Exception catch (e) {
       throw Exception('Error deleting comment: $e');
     }

@@ -251,6 +251,7 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             },
             itemBuilder: (context) {
               final user = (context.read<UserBloc>().state as UserLoaded).user;
+              print(comment.id);
               return [
                 if (user.name == comment.user.name)
                   PopupMenuItem<String>(
@@ -260,6 +261,9 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                           .read<DeleteCommentCubit>()
                           .deleteComment(comment.id);
                       showToast(message: 'Komentar dihapus');
+                      BlocProvider.of<CommentsBloc>(context).add(GetComments(
+                        widget.postId,
+                      ));
                     },
                     child: Row(
                       children: [

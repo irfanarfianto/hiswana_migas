@@ -18,7 +18,6 @@ class CommentModel extends Comment {
     );
   }
 
-
   Map<String, dynamic> toJson() {
     return {
       'content': content,
@@ -32,7 +31,7 @@ class ReplyModel extends Reply {
   const ReplyModel({
     required super.id,
     required super.postId,
-    super.commentId,
+    super.parentId,
     required super.content,
     required super.createdAt,
     required super.user,
@@ -42,7 +41,7 @@ class ReplyModel extends Reply {
     return ReplyModel(
       id: json['id'],
       postId: json['post_id'],
-      commentId: json['parent_id'],
+      parentId: json['parent_id'],
       content: json['content'],
       createdAt: DateTime.parse(json['created_at']),
       user: UserModel.fromJson(json['user']),
@@ -54,7 +53,7 @@ class ReplyModel extends Reply {
     return {
       'id': id,
       'post_id': postId,
-      'parent_id': commentId,
+      'parent_id': parentId,
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'user': user,
