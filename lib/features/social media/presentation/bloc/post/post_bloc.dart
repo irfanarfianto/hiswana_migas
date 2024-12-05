@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:hiswana_migas/features/auth/domain/entities/user_entities.dart';
 import 'package:hiswana_migas/features/social%20media/data/models/post_model.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/detail_post_entity.dart';
 import 'package:hiswana_migas/features/social%20media/domain/entities/post_entity.dart';

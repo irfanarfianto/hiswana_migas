@@ -20,6 +20,19 @@ class DetailPostEntity {
     required this.likes,
     required this.comments,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'caption': caption,
+      'photos': photos,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'user': user.toJson(),
+      'likes': likes.map((like) => like.toJson()).toList(),
+      'comments': comments.map((comment) => comment.toJson()).toList(),
+    };
+  }
 }
 
 class Like {
@@ -28,6 +41,14 @@ class Like {
   final int postId;
 
   Like({required this.id, required this.userId, required this.postId});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'post_id': postId,
+    };
+  }
 }
 
 class CommentPost {
@@ -44,4 +65,14 @@ class CommentPost {
     required this.content,
     required this.createdAt,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'post_id': postId,
+      'user_id': userId,
+      'content': content,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }

@@ -43,9 +43,10 @@ class PostWidget extends StatelessWidget {
               child: CircleAvatar(
                 radius: 20,
                 backgroundImage: post.user.profilePhoto == 'default.jpg'
-                    ? const AssetImage('assets/user.jpg')
+                    ? const AssetImage('assets/user.jpg') as ImageProvider
                     : CachedNetworkImageProvider(
-                        '${dotenv.env['APP_URL']}${post.user.profilePhoto}'),
+                        '${dotenv.env['APP_URL']}${post.user.profilePhoto}',
+                      ),
               ),
             ),
             title: Text(
@@ -186,20 +187,22 @@ class PostWidget extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ReadMoreText(
-                textAlign: TextAlign.start,
-                post.caption ?? '',
-                trimLines: 2,
-                style: const TextStyle(
-                  fontSize: 20,
-                ),
-                trimMode: TrimMode.Line,
-                colorClickableText: Theme.of(context).colorScheme.onSecondary,
-                trimCollapsedText: 'Selengkapnya',
-                trimExpandedText: 'Sembunyikan',
-                moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.onSecondary,
-                    ),
-              ),
+                  textAlign: TextAlign.start,
+                  post.caption ?? '',
+                  trimLines: 2,
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  trimMode: TrimMode.Line,
+                  colorClickableText: Theme.of(context).colorScheme.onSecondary,
+                  trimCollapsedText: 'Selengkapnya',
+                  trimExpandedText: '',
+                  moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                  lessStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      )),
             ),
           ),
         if (post.photos.isNotEmpty)
@@ -286,20 +289,22 @@ class PostWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ReadMoreText(
-              textAlign: TextAlign.start,
-              post.caption ?? '',
-              trimLines: 2,
-              style: const TextStyle(
-                fontSize: 16,
-              ),
-              trimMode: TrimMode.Line,
-              colorClickableText: Theme.of(context).colorScheme.onSecondary,
-              trimCollapsedText: 'Selengkapnya',
-              trimExpandedText: 'Sembunyikan',
-              moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onSecondary,
-                  ),
-            ),
+                textAlign: TextAlign.start,
+                post.caption ?? '',
+                trimLines: 2,
+                style: const TextStyle(
+                  fontSize: 16,
+                ),
+                trimMode: TrimMode.Line,
+                colorClickableText: Theme.of(context).colorScheme.onSecondary,
+                trimCollapsedText: 'Selengkapnya',
+                trimExpandedText: '',
+                moreStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                lessStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    )),
           ),
         if (post.comments.isNotEmpty)
           Padding(

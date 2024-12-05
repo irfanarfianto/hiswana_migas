@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:hiswana_migas/features/auth/data/datasources/db/user_db_source.dart';
 import 'package:hiswana_migas/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:hiswana_migas/features/auth/domain/repositories/auth_repository.dart';
 import 'package:hiswana_migas/features/auth/domain/usecase/get_kota.dart';
@@ -35,6 +36,7 @@ Future<void> init() async {
 
   // TokenLocalDataSource
   sl.registerLazySingleton(() => TokenLocalDataSource(secureStorage));
+  sl.registerLazySingleton(() => UserDatabaseHelper());
 
   // Registering UseCases
   sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
@@ -54,8 +56,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteComment(sl()));
 
   // Registering Repositories
-  sl.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<AuthRepository>(() =>
+      AuthRepositoryImpl(remoteDataSource: sl(), userDatabaseHelper: sl()));
   // Post Repositories
   sl.registerLazySingleton<PostRepository>(
       () => PostRepositoryImpl(remoteDataSource: sl()));
@@ -64,7 +66,10 @@ Future<void> init() async {
       () => CommentsRepositoryImpl(remoteDataSource: sl()));
   // Registering Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(
-      client: sl(), baseUrl: baseUrl, tokenLocalDataSource: sl()));
+      client: sl(),
+      baseUrl: baseUrl,
+      tokenLocalDataSource: sl(),
+      userDatabaseHelper: sl()));
   // Post Data Sources
   sl.registerLazySingleton<PostRemoteDataSource>(() => PostRemoteDataSourceImpl(
       client: sl(), baseUrl: baseUrl, tokenLocalDataSource: sl()));

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:hiswana_migas/core/exaption.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/auth/data/datasources/db/user_db_source.dart';
 import 'package:hiswana_migas/features/auth/data/models/kota_model.dart';
 import 'package:hiswana_migas/features/auth/data/models/prov_model.dart';
 import 'package:hiswana_migas/features/auth/data/models/user_model.dart';
@@ -23,15 +24,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final http.Client client;
   final String baseUrl;
   final TokenLocalDataSource tokenLocalDataSource;
+  final UserDatabaseHelper userDatabaseHelper;
 
   AuthRemoteDataSourceImpl({
     required this.client,
     required this.baseUrl,
     required this.tokenLocalDataSource,
+    required this.userDatabaseHelper,
   });
 
   @override
   Future<UserModel> getUserProfile(String userId) async {
+    // Pertama cek apakah data sudah ada di lokal
+    UserModel? localUser = await userDatabaseHelper.getUser();
+    if (localUser != null) {
+      return localUser; // Kembalikan data lokal jika ada
+    }
+
     try {
       final token = await tokenLocalDataSource.getToken();
 
@@ -42,28 +51,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 30)); // Timeout untuk request
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        return UserModel.fromJson(json.decode(response.body));
+        final user = UserModel.fromJson(json.decode(response.body));
+
+        // Simpan data yang diambil dari server ke lokal
+        await userDatabaseHelper.insertUser(user);
+
+        return user;
       } else {
         throw ServerException(
             'Gagal mendapatkan data user, status code: ${response.statusCode}');
       }
     } on SocketException catch (e) {
-      // Menangani error jaringan
       throw ServerException('Tidak dapat terhubung ke jaringan: $e');
     } on TimeoutException catch (e) {
-      // Menangani timeout pada request
       throw ServerException('Waktu request habis: $e');
     } on HttpException catch (e) {
-      // Menangani error HTTP lainnya
       throw ServerException('Kesalahan HTTP: $e');
     } on FormatException catch (e) {
-      // Menangani error format data (misalnya kesalahan saat parsing JSON)
       throw ServerException('Format data tidak valid: $e');
     } catch (e) {
-      // Menangani error lainnya
       throw ServerException('Terjadi kesalahan: $e');
     }
   }
@@ -92,11 +101,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           tokenLocalDataSource.saveToken(token);
         }
 
-        // Mengecek data user
         final user = decodedResponse['user'];
         if (user != null) {
-          // Membuat dan mengembalikan model User dengan data yang sesuai
-          return UserModel.fromJson({
+          final userModel = UserModel.fromJson({
             'name': user['name'],
             'email': user['email'],
             'province_code': user['province_code'],
@@ -105,6 +112,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             'unique_number': user['unique_number'],
             'profile_photo': user['profile_photo'],
           });
+
+          await userDatabaseHelper.insertUser(userModel);
+
+          return userModel;
         } else {
           throw ServerException('User data tidak tersedia dalam respons.');
         }

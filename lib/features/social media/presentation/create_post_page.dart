@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -25,28 +26,37 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImages(ImageSource source) async {
-    if (_images.isNotEmpty) {
-      showToast(message: 'Mohon tunggu unggahan sebelumnya selesai');
+    if (_images.length >= 8) {
+      showToast(message: 'Maksimal 8 gambar yang dapat diunggah');
       return;
     }
 
-    XFile? image;
-    if (source == ImageSource.camera) {
-      image = await _picker.pickImage(source: ImageSource.camera);
-    } else {
-      final List<XFile>? images = await _picker.pickMultiImage();
-      if (images != null) {
-        setState(() {
-          _images.addAll(images);
-        });
-        return;
+    try {
+      XFile? image;
+      if (source == ImageSource.camera) {
+        image = await _picker.pickImage(source: ImageSource.camera);
+      } else {
+        final List<XFile>? images = await _picker.pickMultiImage();
+        if (images != null) {
+          setState(() {
+            final int remainingSlots = 8 - _images.length;
+            _images.addAll(images.take(remainingSlots));
+          });
+          return;
+        }
       }
-    }
 
-    if (image != null) {
-      setState(() {
-        _images.add(image);
-      });
+      if (image != null) {
+        setState(() {
+          _images.add(image);
+        });
+      }
+    } catch (e) {
+      if (e is PlatformException && e.code == 'already_active') {
+        showToast(message: 'Pilih gambar sedang aktif. Silakan coba lagi.');
+      } else {
+        showToast(message: 'Terjadi kesalahan}');
+      }
     }
   }
 
@@ -138,37 +148,35 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           crossAxisSpacing: 4.0,
                           mainAxisSpacing: 4.0,
                         ),
-                        itemCount: _images.length > 6 ? 6 : _images.length,
+                        itemCount: _images.length,
                         itemBuilder: (context, index) {
-                          if (_images.length > 6 && index == 5) {
-                            return Stack(
-                              fit: StackFit.expand,
-                              clipBehavior: Clip.none,
-                              children: [
-                                Image.file(
-                                  File(_images[index]!.path),
-                                  fit: BoxFit.cover,
-                                ),
-                                Center(
-                                  child: Text(
-                                    '+ ${_images.length - 6}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .copyWith(
-                                          color: Colors.white,
-                                        ),
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(
+                                File(_images[index]!.path),
+                                fit: BoxFit.cover,
+                              ),
+                              Positioned(
+                                top: 5,
+                                right: 5,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _images.removeAt(index);
+                                    });
+                                  },
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    child: const Icon(Icons.close,
+                                        size: 16, color: Colors.white),
                                   ),
                                 ),
-                              ],
-                            );
-                          }
-                          return Image.file(
-                            File(_images[index]!.path),
-                            fit: BoxFit.cover,
+                              ),
+                            ],
                           );
                         },
-                      ),
+                      )
               ],
             ),
           );

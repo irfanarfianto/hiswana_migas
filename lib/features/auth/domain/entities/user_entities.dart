@@ -29,4 +29,17 @@ class User extends Equatable {
         uniqueNumber,
         profilePhoto,
       ];
+
+  // Adding toJson() to serialize the User class to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'province_code': provinceCode,
+      'city_code': cityCode,
+      'register_number': registerNumber,
+      'unique_number': uniqueNumber,
+      'profile_photo': profilePhoto,
+    };
+  }
 }

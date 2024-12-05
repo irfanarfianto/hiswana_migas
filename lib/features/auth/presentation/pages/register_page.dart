@@ -1,5 +1,3 @@
-// ignore_for_file: empty_catches
-
 import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -45,11 +43,22 @@ class _RegisterPageState extends State<RegisterPage> {
           await picker.pickImage(source: ImageSource.gallery);
 
       if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        final fileSize = file.lengthSync();
+
+        const int maxFileSize = 2 * 1024 * 1024;
+        if (fileSize > maxFileSize) {
+          showToast(
+              message: 'Ukuran gambar melebihi 2MB. Silakan pilih file lain.');
+          return;
+        }
+
         setState(() {
-          profileImage = File(pickedFile.path);
+          profileImage = file;
         });
       }
     } catch (e) {
+      showToast(message: 'Gagal memilih gambar');
     }
   }
 
@@ -375,7 +384,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       onPressed: () {
                                         setState(() {
                                           _isPasswordHidden =
-                                              !_isPasswordHidden; // Toggle status
+                                              !_isPasswordHidden;
                                         });
                                       },
                                     ),

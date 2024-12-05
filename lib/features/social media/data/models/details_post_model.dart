@@ -28,6 +28,24 @@ class DetailsPostModel extends DetailPostEntity {
           .toList(),
     );
   }
+  @override
+  String toString() {
+    return 'DetailsPostModel{id: $id, caption: $caption, createdAt: $createdAt, updatedAt: $updatedAt, user: ${user.name}, likes: ${likes.length}, comments: ${comments.length}}';
+  }
+
+  // Menambahkan toJson() untuk mengonversi objek ke JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'caption': caption,
+      'photo': jsonEncode(photos),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'user': user.toJson(),
+      'likes': likes.map((like) => like.toJson()).toList(),
+      'comments': comments.map((comment) => comment.toJson()).toList(),
+    };
+  }
 }
 
 class LikeModel extends Like {
@@ -39,6 +57,14 @@ class LikeModel extends Like {
       userId: json['user_id'],
       postId: json['post_id'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'post_id': postId,
+    };
   }
 }
 
@@ -59,5 +85,16 @@ class CommentModelPost extends CommentPost {
       content: json['content'],
       createdAt: DateTime.parse(json['created_at']),
     );
+  }
+
+  // Menambahkan toJson() untuk mengonversi objek ke JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'post_id': postId,
+      'user_id': userId,
+      'content': content,
+      'created_at': createdAt.toIso8601String(),
+    };
   }
 }
