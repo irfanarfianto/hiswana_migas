@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:hiswana_migas/core/failure.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/social%20media/data/models/comment_model.dart';
@@ -37,21 +39,23 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   Future<List<DetailsPostModel>> getPosts() async {
     try {
       final token = await tokenLocalDataSource.getToken();
-      final response = await client.get(
-        Uri.parse('${baseUrl}posts'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      return retry(() async {
+        final response = await client.get(
+          Uri.parse('${baseUrl}posts'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> posts = json.decode(response.body)['data'];
-        return posts.map((post) => DetailsPostModel.fromJson(post)).toList();
-      } else {
-        throw Exception('Failed to load posts: ${response.body}');
-      }
+        if (response.statusCode == 200) {
+          final List<dynamic> posts = json.decode(response.body)['data'];
+          return posts.map((post) => DetailsPostModel.fromJson(post)).toList();
+        } else {
+          throw Exception('Failed to load posts: ${response.body}');
+        }
+      });
     } on Exception catch (e) {
       throw Exception('Error loading posts: $e');
     }
@@ -61,23 +65,25 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   Future<List<DetailComment>> getComments(int postId) async {
     try {
       final token = await tokenLocalDataSource.getToken();
-      final response = await client.get(
-        Uri.parse('${baseUrl}posts/$postId/comments'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      return retry(() async {
+        final response = await client.get(
+          Uri.parse('${baseUrl}posts/$postId/comments'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> comments = json.decode(response.body)['data'];
-        return comments
-            .map((comment) => CommentDetailModel.fromJson(comment))
-            .toList();
-      } else {
-        throw Exception('Failed to load comments: ${response.body}');
-      }
+        if (response.statusCode == 200) {
+          final List<dynamic> comments = json.decode(response.body)['data'];
+          return comments
+              .map((comment) => CommentDetailModel.fromJson(comment))
+              .toList();
+        } else {
+          throw Exception('Failed to load comments: ${response.body}');
+        }
+      });
     } on Exception catch (e) {
       throw Exception('Error loading comments: $e');
     }
@@ -146,17 +152,55 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     request.headers['Accept'] = 'application/json';
     request.headers['Authorization'] = 'Bearer $token';
 
+    // Debug: Cetak token dan URL
+    debugPrint("Token: $token");
+    debugPrint("Request URL: ${request.url}");
+
     // Tambahkan caption jika tidak null
     if (updatePost.caption != null && updatePost.caption!.isNotEmpty) {
       request.fields['caption'] = updatePost.caption!;
+      debugPrint("Caption: ${updatePost.caption}");
     }
 
-    // Tambahkan foto jika tidak kosong
-    if (updatePost.photo != null && updatePost.photo!.isNotEmpty) {
-      for (var photoPath in updatePost.photo!) {
-        request.files.add(
-          await http.MultipartFile.fromPath('photo[]', photoPath),
-        );
+    // Pisahkan gambar lokal dan gambar server
+    final serverImages = <String>[];
+    final localImages = <String>[];
+
+    if (updatePost.photo != null) {
+      for (var path in updatePost.photo!) {
+        // Periksa apakah path dimulai dengan '/storage/' atau URL
+        if (path.startsWith('http') ||
+            path.startsWith('https') ||
+            path.startsWith('/storage/')) {
+          serverImages.add(path); // Gambar server
+        } else {
+          localImages.add(path); // Gambar lokal
+        }
+      }
+    }
+
+    // Debug: Cetak gambar yang akan dikirim
+    debugPrint("Server Images: $serverImages");
+    debugPrint("Local Images: $localImages");
+
+    // Kirim gambar server sebagai URL (tidak perlu mengirim file)
+    if (serverImages.isNotEmpty) {
+      request.fields['server_photos'] = serverImages.join(',');
+      debugPrint("Server photos field added: ${serverImages.join(',')}");
+    }
+
+    // Kirim foto lokal jika ada, tanpa menghapus gambar yang sudah ada di server
+    if (localImages.isNotEmpty) {
+      final validLocalImages = await _getValidLocalImages(localImages);
+
+      if (validLocalImages.isNotEmpty) {
+        for (var photoPath in validLocalImages) {
+          debugPrint("Adding local photo: $photoPath");
+          request.files
+              .add(await http.MultipartFile.fromPath('photo[]', photoPath));
+        }
+      } else {
+        debugPrint("No valid local images to send.");
       }
     }
 
@@ -169,18 +213,40 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     try {
       var response = await request.send();
 
+      debugPrint("Response status: ${response.statusCode}");
+
       if (response.statusCode == 200) {
         var responseData = await response.stream.bytesToString();
+        debugPrint("Response Data: $responseData");
+
         final dynamic updatePostJson = json.decode(responseData);
         return PostModel.fromJson(updatePostJson);
       } else {
         var errorResponse = await response.stream.bytesToString();
+        debugPrint("Error Response: $errorResponse");
         throw Exception(
             'Failed to update post: ${response.statusCode} - ${response.reasonPhrase}, Response: $errorResponse');
       }
     } on Exception catch (e) {
+      debugPrint("Exception occurred: $e");
       throw Exception('Error update post: $e');
     }
+  }
+
+// Fungsi untuk memeriksa apakah gambar lokal valid dan ada
+  Future<List<String>> _getValidLocalImages(List<String> paths) async {
+    List<String> validPaths = [];
+
+    for (var path in paths) {
+      final file = File(path);
+      if (await file.exists()) {
+        validPaths.add(path); // Hanya tambahkan jika file ada
+      } else {
+        debugPrint("Gambar tidak ditemukan: $path");
+      }
+    }
+
+    return validPaths;
   }
 
   // likes
@@ -308,6 +374,25 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       }
     } on Exception catch (e) {
       throw Exception('Error deleting comment: $e');
+    }
+  }
+
+  Future<T> retry<T>(
+    Future<T> Function() action, {
+    int maxRetries = 3,
+    Duration delay = const Duration(seconds: 2),
+  }) async {
+    int attempt = 0;
+    while (true) {
+      try {
+        return await action();
+      } catch (e) {
+        attempt++;
+        if (attempt >= maxRetries) {
+          rethrow;
+        }
+        await Future.delayed(delay * attempt);
+      }
     }
   }
 }

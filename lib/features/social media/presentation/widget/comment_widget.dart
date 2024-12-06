@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -193,13 +195,24 @@ class _CommentsWidgetState extends State<CommentsWidget> {
         ListTile(
           contentPadding: const EdgeInsets.all(0),
           isThreeLine: true,
-          leading: CircleAvatar(
-            radius: 20,
-            backgroundImage: comment.user.profilePhoto == 'default.jpg'
-                ? const AssetImage('assets/user.jpg')
-                : CachedNetworkImageProvider(
-                    '${dotenv.env['APP_URL']}${comment.user.profilePhoto}'),
-          ),
+          leading: comment.user.profilePhoto == 'default.jpg'
+              ? const CircleAvatar(
+                  radius: 20,
+                  backgroundImage: AssetImage('assets/user.jpg'),
+                )
+              : CachedNetworkImage(
+                  imageUrl: '${dotenv.env['APP_URL']}${comment.user.profilePhoto}',
+                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                    radius: 20,
+                    backgroundImage: imageProvider,
+                  ),
+                  placeholder: (context, url) =>
+                      const CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => const CircleAvatar(
+                    radius: 20,
+                    child: Icon(Icons.error),
+                  ),
+                ),
           title: Text(
             comment.user.name,
             style: Theme.of(context)
@@ -251,7 +264,6 @@ class _CommentsWidgetState extends State<CommentsWidget> {
             },
             itemBuilder: (context) {
               final user = (context.read<UserBloc>().state as UserLoaded).user;
-              print(comment.id);
               return [
                 if (user.name == comment.user.name)
                   PopupMenuItem<String>(
@@ -307,13 +319,27 @@ class _CommentsWidgetState extends State<CommentsWidget> {
                 return ListTile(
                   contentPadding: const EdgeInsets.all(0),
                   isThreeLine: true,
-                  leading: CircleAvatar(
-                    radius: 15,
-                    backgroundImage: reply.user.profilePhoto == 'default.jpg'
-                        ? const AssetImage('assets/user.jpg')
-                        : CachedNetworkImageProvider(
-                            '${dotenv.env['APP_URL']}${reply.user.profilePhoto}'),
-                  ),
+                  leading: reply.user.profilePhoto == 'default.jpg'
+                      ? const CircleAvatar(
+                          radius: 20,
+                          backgroundImage: AssetImage('assets/user.jpg'),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl:
+                              '${dotenv.env['APP_URL']}${reply.user.profilePhoto}',
+                          imageBuilder: (context, imageProvider) =>
+                              CircleAvatar(
+                            radius: 20,
+                            backgroundImage: imageProvider,
+                          ),
+                          placeholder: (context, url) =>
+                              const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                              const CircleAvatar(
+                            radius: 20,
+                            child: Icon(Icons.error),
+                          ),
+                        ),
                   title: Text(
                     reply.user.name,
                     style: Theme.of(context)

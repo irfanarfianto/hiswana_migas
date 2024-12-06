@@ -138,13 +138,31 @@ class _HomePageState extends State<HomePage> {
                                     onTap: () {
                                       Scaffold.of(context).openDrawer();
                                     },
-                                    child: CircleAvatar(
-                                      radius: 25,
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                        '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
-                                      ),
-                                    ),
+                                    child: state.user.profilePhoto ==
+                                            'default.jpg'
+                                        ? const CircleAvatar(
+                                            radius: 20,
+                                            backgroundImage:
+                                                AssetImage('assets/user.jpg'),
+                                          )
+                                        : CachedNetworkImage(
+                                            imageUrl:
+                                                '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
+                                            imageBuilder:
+                                                (context, imageProvider) =>
+                                                    CircleAvatar(
+                                              radius: 20,
+                                              backgroundImage: imageProvider,
+                                            ),
+                                            placeholder: (context, url) =>
+                                                const CircularProgressIndicator(),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    const CircleAvatar(
+                                              radius: 20,
+                                              child: Icon(Icons.error),
+                                            ),
+                                          ),
                                   ),
                                 ]),
                           ),

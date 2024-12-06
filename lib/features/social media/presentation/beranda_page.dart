@@ -1,5 +1,6 @@
 // ignore_for_file: empty_catches
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,13 +77,28 @@ class _BerandaPageState extends State<BerandaPage> {
                           onTap: () {
                             context.pushNamed('profile');
                           },
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: state.user.profilePhoto != null
-                                ? NetworkImage(
-                                    '${dotenv.env['APP_URL']}${state.user.profilePhoto!}')
-                                : const AssetImage('assets/user.jpg'),
-                          ),
+                          child: state.user.profilePhoto == 'default.jpg'
+                              ? const CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage:
+                                      AssetImage('assets/user.jpg'),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl:
+                                      '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
+                                  imageBuilder: (context, imageProvider) =>
+                                      CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: imageProvider,
+                                  ),
+                                  placeholder: (context, url) =>
+                                      const CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) =>
+                                      const CircleAvatar(
+                                    radius: 20,
+                                    child: Icon(Icons.error),
+                                  ),
+                                ),
                         );
                       }
                       return const SizedBox.shrink();
@@ -100,6 +116,7 @@ class _BerandaPageState extends State<BerandaPage> {
                       });
                     },
                     child: DottedBorder(
+                      color: Theme.of(context).colorScheme.onSecondary,
                       borderType: BorderType.RRect,
                       radius: const Radius.circular(50),
                       child: Container(

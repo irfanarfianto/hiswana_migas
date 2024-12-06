@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
+import 'package:hiswana_migas/features/auth/data/datasources/db/user_db_source.dart';
 import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
 
 class DrawerWidget extends StatelessWidget {
@@ -28,12 +30,30 @@ class DrawerWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 UserAccountsDrawerHeader(
-                  currentAccountPicture: CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage(
-                      '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
-                    ),
-                  ),
+                  currentAccountPicture: state.user.profilePhoto ==
+                          'default.jpg'
+                      ? const CircleAvatar(
+                          radius: 20,
+                          backgroundImage:
+                              AssetImage('assets/user.jpg'),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl:
+                              '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
+                          imageBuilder: (context, imageProvider) =>
+                              CircleAvatar(
+                            radius: 20,
+                            backgroundImage: imageProvider,
+                          ),
+                          placeholder: (context, url) =>
+                              const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                              const CircleAvatar(
+                            radius: 20,
+                            child: Icon(Icons.error),
+                          ),
+                        ),
+
                   accountName: Text(state.user.name),
                   accountEmail: Text(state.user.email),
                 ),
@@ -56,6 +76,7 @@ class DrawerWidget extends StatelessWidget {
 
   void _showLogoutDialog(
       BuildContext context, TokenLocalDataSource tokenLocalDataSource) {
+    final userDatabaseHelper = UserDatabaseHelper();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -70,9 +91,13 @@ class DrawerWidget extends StatelessWidget {
               child: const Text('Batal'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 context.pop();
-                tokenLocalDataSource.deleteToken();
+
+                await tokenLocalDataSource.deleteToken();
+
+                await userDatabaseHelper.clearLocalData();
+
                 context.go('/welcome2');
               },
               child: const Text('Logout'),

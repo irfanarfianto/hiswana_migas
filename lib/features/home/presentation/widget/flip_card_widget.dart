@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -59,12 +60,29 @@ class FlipCardWidget extends StatelessWidget {
                             if (state is UserLoaded) {
                               return Column(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 90,
-                                    backgroundImage: NetworkImage(
-                                      '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
-                                    ),
-                                  ),
+                                  state.user.profilePhoto == 'default.jpg'
+                                      ? const CircleAvatar(
+                                          radius: 90,
+                                          backgroundImage:
+                                              AssetImage('assets/user.jpg'),
+                                        )
+                                      : CachedNetworkImage(
+                                          imageUrl:
+                                              '${dotenv.env['APP_URL']}${state.user.profilePhoto}',
+                                          imageBuilder:
+                                              (context, imageProvider) =>
+                                                  CircleAvatar(
+                                            radius: 90,
+                                            backgroundImage: imageProvider,
+                                          ),
+                                          placeholder: (context, url) =>
+                                              const CircularProgressIndicator(),
+                                          errorWidget: (context, url, error) =>
+                                              const CircleAvatar(
+                                            radius: 90,
+                                            child: Icon(Icons.error),
+                                          ),
+                                        ),
                                   const SizedBox(height: 15),
                                   Text(
                                     state.user.name,

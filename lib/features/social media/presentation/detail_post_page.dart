@@ -45,14 +45,25 @@ class _DetailPostPageState extends State<DetailPostPage> {
           children: [
             ListTile(
               isThreeLine: true,
-              leading: InkWell(
-                onTap: () {},
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(
-                      '${dotenv.env['APP_URL']}${post.user.profilePhoto}'),
-                ),
-              ),
+              leading: post.user.profilePhoto == 'default.jpg'
+                  ? const CircleAvatar(
+                      radius: 20,
+                      backgroundImage: AssetImage('assets/user.jpg'),
+                    )
+                  : CachedNetworkImage(
+                      imageUrl:
+                          '${dotenv.env['APP_URL']}${post.user.profilePhoto}',
+                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                        radius: 20,
+                        backgroundImage: imageProvider,
+                      ),
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => const CircleAvatar(
+                        radius: 20,
+                        child: Icon(Icons.error),
+                      ),
+                    ),
               title: Text(
                 post.user.name,
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(

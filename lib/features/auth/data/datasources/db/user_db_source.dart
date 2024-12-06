@@ -57,4 +57,10 @@ class UserDatabaseHelper {
       return null;
     }
   }
+
+  Future<void> clearLocalData() async {
+  final db = await database;
+  await db.delete('user');
+}
+
 }

@@ -38,17 +38,25 @@ class PostWidget extends StatelessWidget {
               );
             },
             isThreeLine: true,
-            leading: InkWell(
-              onTap: () {},
-              child: CircleAvatar(
-                radius: 20,
-                backgroundImage: post.user.profilePhoto == 'default.jpg'
-                    ? const AssetImage('assets/user.jpg') as ImageProvider
-                    : CachedNetworkImageProvider(
+            leading: post.user.profilePhoto == 'default.jpg'
+                ? const CircleAvatar(
+                    radius: 20,
+                    backgroundImage: AssetImage('assets/user.jpg'),
+                  )
+                : CachedNetworkImage(
+                    imageUrl:
                         '${dotenv.env['APP_URL']}${post.user.profilePhoto}',
-                      ),
-              ),
-            ),
+                    imageBuilder: (context, imageProvider) => CircleAvatar(
+                      radius: 20,
+                      backgroundImage: imageProvider,
+                    ),
+                    placeholder: (context, url) =>
+                        const CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => const CircleAvatar(
+                      radius: 20,
+                      child: Icon(Icons.error),
+                    ),
+                  ),
             title: Text(
               post.user.name,
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -208,26 +216,59 @@ class PostWidget extends StatelessWidget {
         if (post.photos.isNotEmpty)
           SizedBox(
             height: MediaQuery.of(context).size.width,
-            child: PageView.builder(
-              itemCount: post.photos.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    context.pushNamed(
-                      'detail-post',
-                      extra: post,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  itemCount: post.photos.length,
+                  itemBuilder: (context, index) {
+                    print(
+                        '${dotenv.env['APP_URL']}${post.photos[index].replaceFirst('/', '')}');
+                    return Stack(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            context.pushNamed(
+                              'detail-post',
+                              extra: post,
+                            );
+                          },
+                          child: ClipRRect(
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: CachedNetworkImage(
+                                imageUrl:
+                                    '${dotenv.env['APP_URL']}${post.photos[index].replaceFirst('/', '')}',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (post.photos.length > 1)
+                          Positioned(
+                            right: 10,
+                            top: 10,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${index + 1}/${post.photos.length}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall!
+                                    .copyWith(
+                                      color: Colors.white,
+                                    ),
+                              ),
+                            ),
+                          ),
+                      ],
                     );
                   },
-                  child: ClipRRect(
-                    child: CachedNetworkImage(
-                      imageUrl: '${dotenv.env['APP_URL']}${post.photos[index]}',
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          const Center(child: CircularProgressIndicator()),
-                    ),
-                  ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         const SizedBox(height: 5),

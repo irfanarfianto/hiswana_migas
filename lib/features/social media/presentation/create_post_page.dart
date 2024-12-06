@@ -158,21 +158,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 fit: BoxFit.cover,
                               ),
                               Positioned(
-                                top: 5,
-                                right: 5,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _images.removeAt(index);
-                                    });
-                                  },
-                                  child: const CircleAvatar(
-                                    backgroundColor: Colors.red,
-                                    child: Icon(Icons.close,
-                                        size: 16, color: Colors.white),
-                                  ),
-                                ),
-                              ),
+                                  top: 5,
+                                  right: 5,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      setState(() {
+                                        _images.removeAt(index);
+                                      });
+                                    },
+                                  )),
                             ],
                           );
                         },

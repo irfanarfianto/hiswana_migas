@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api, unnecessary_nullable_for_final_variable_declarations
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +9,7 @@ import 'package:hiswana_migas/features/social%20media/domain/entities/detail_pos
 import 'package:hiswana_migas/features/social%20media/presentation/bloc/post/post_bloc.dart';
 import 'package:hiswana_migas/utils/toast_helper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditPostPage extends StatefulWidget {
   final DetailPostEntity post;
@@ -23,15 +22,13 @@ class EditPostPage extends StatefulWidget {
 class _EditPostPageState extends State<EditPostPage> {
   final TextEditingController contentController = TextEditingController();
   final List<XFile?> _images = [];
-
+  final List<String> _deletedImages = []; // To track images that are deleted
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi controller dengan caption yang ada
     contentController.text = widget.post.caption ?? '';
-    // Inisialisasi gambar dengan gambar yang ada
     if (widget.post.photos.isNotEmpty) {
       _images.addAll(widget.post.photos.map((e) => XFile(e)).toList());
     }
@@ -58,26 +55,50 @@ class _EditPostPageState extends State<EditPostPage> {
     }
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      final image = _images[index];
+      if (image != null) {
+        // If it's a server image, track it for deletion on the server
+        if (widget.post.photos.contains(image.path)) {
+          _deletedImages.add(image.path); // Track image to delete from server
+        }
+        _images.removeAt(index);
+      }
+    });
+  }
+
   void _submitPost() {
     if (contentController.text.isEmpty && _images.isEmpty) {
       showToast(message: "Caption atau foto harus diisi");
       return;
     }
 
+    // Pisahkan foto lokal dan foto dari server
+    final localImages = _images
+        .where((image) => !widget.post.photos.contains(image?.path))
+        .map((e) => e!.path)
+        .toList();
+    final serverImages = widget.post.photos; // Gambar yang sudah ada di server
+
+    // Hanya kirim gambar lokal yang baru
     final postCreate = PostModel(
       caption: contentController.text.isNotEmpty ? contentController.text : '',
-      photo: _images.isNotEmpty ? _images.map((e) => e!.path).toList() : [],
+      photo: [
+        ...serverImages, // Gambar server tidak perlu dikirim ulang
+        ...localImages // Kirim hanya gambar lokal yang baru
+      ],
     );
 
     debugPrint("Payload before sending: ${postCreate.toJson()}");
+
     try {
       BlocProvider.of<PostBloc>(context)
           .add(UpdatePostEvent(postId: widget.post.id, updatePost: postCreate));
-      BlocProvider.of<PostBloc>(context).add(GetPostsEvent());
       context.pop();
       showToast(message: "Postingan berhasil diperbarui");
     } on Exception {
-      showToast(message: "Gagal memperbarui postingan}");
+      showToast(message: "Gagal memperbarui postingan");
     }
   }
 
@@ -137,41 +158,54 @@ class _EditPostPageState extends State<EditPostPage> {
                       crossAxisSpacing: 4.0,
                       mainAxisSpacing: 4.0,
                     ),
-                    itemCount: _images.length > 6 ? 6 : _images.length,
+                    itemCount: _images.length,
                     itemBuilder: (context, index) {
-                      if (_images.length > 6 && index == 5) {
+                      final image = _images[index];
+                      // Check if the image is from the server or local
+                      if (widget.post.photos.contains(image?.path)) {
                         return Stack(
                           fit: StackFit.expand,
                           clipBehavior: Clip.none,
                           children: [
                             CachedNetworkImage(
                               imageUrl:
-                                  '${dotenv.env['APP_URL']}${_images[index]!.path}',
+                                  '${dotenv.env['APP_URL']}${image!.path}',
                               fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator()),
                             ),
-                            Center(
-                              child: Text(
-                                '+ ${_images.length - 6}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .copyWith(
-                                      color: Colors.white,
-                                    ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.white),
+                                onPressed: () => _removeImage(index),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return Stack(
+                          fit: StackFit.expand,
+                          clipBehavior: Clip.none,
+                          children: [
+                            Image.file(
+                              File(image!.path),
+                              fit: BoxFit.cover,
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.white),
+                                onPressed: () => _removeImage(index),
                               ),
                             ),
                           ],
                         );
                       }
-                      return CachedNetworkImage(
-                        imageUrl:
-                            '${dotenv.env['APP_URL']}${_images[index]!.path}',
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            const Center(child: CircularProgressIndicator()),
-                      );
                     },
                   ),
           ],
