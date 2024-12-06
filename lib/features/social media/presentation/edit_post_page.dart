@@ -35,23 +35,20 @@ class _EditPostPageState extends State<EditPostPage> {
   }
 
   Future<void> _pickImages(ImageSource source) async {
-    XFile? image;
-    if (source == ImageSource.camera) {
-      image = await _picker.pickImage(source: ImageSource.camera);
-    } else {
-      final List<XFile>? images = await _picker.pickMultiImage();
-      if (images != null) {
-        setState(() {
-          _images.addAll(images);
-        });
-        return;
+    try {
+      XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        final file = File(image.path);
+        if (await file.length() <= 2 * 1024 * 1024) {
+          setState(() {
+            _images.add(image);
+          });
+        } else {
+          showToast(message: 'Ukuran gambar tidak boleh lebih dari 2MB');
+        }
       }
-    }
-
-    if (image != null) {
-      setState(() {
-        _images.add(image);
-      });
+    } catch (e) {
+      showToast(message: 'Terjadi kesalahan');
     }
   }
 

@@ -38,24 +38,38 @@ class _CreatePostPageState extends State<CreatePostPage> {
       } else {
         final List<XFile>? images = await _picker.pickMultiImage();
         if (images != null) {
-          setState(() {
-            final int remainingSlots = 8 - _images.length;
-            _images.addAll(images.take(remainingSlots));
-          });
+          for (var img in images) {
+            final file = File(img.path);
+            if (await file.length() <= 2 * 1024 * 1024) {
+              setState(() {
+                final int remainingSlots = 8 - _images.length;
+                if (remainingSlots > 0) {
+                  _images.add(img);
+                }
+              });
+            } else {
+              showToast(message: 'Ukuran gambar tidak boleh lebih dari 2MB');
+            }
+          }
           return;
         }
       }
 
       if (image != null) {
-        setState(() {
-          _images.add(image);
-        });
+        final file = File(image.path);
+        if (await file.length() <= 2 * 1024 * 1024) {
+          setState(() {
+            _images.add(image);
+          });
+        } else {
+          showToast(message: 'Ukuran gambar tidak boleh lebih dari 2MB');
+        }
       }
     } catch (e) {
       if (e is PlatformException && e.code == 'already_active') {
         showToast(message: 'Pilih gambar sedang aktif. Silakan coba lagi.');
       } else {
-        showToast(message: 'Terjadi kesalahan}');
+        showToast(message: 'Terjadi kesalahan');
       }
     }
   }

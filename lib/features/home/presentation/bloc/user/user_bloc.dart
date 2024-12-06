@@ -19,11 +19,9 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
         emit(result.fold(
           (failure) {
-            // Debugging: print error message
             return UserError(failure.message);
           },
           (user) {
-            // Debugging: print user info
             return UserLoaded(user);
           },
         ));

@@ -221,8 +221,6 @@ class PostWidget extends StatelessWidget {
                 PageView.builder(
                   itemCount: post.photos.length,
                   itemBuilder: (context, index) {
-                    print(
-                        '${dotenv.env['APP_URL']}${post.photos[index].replaceFirst('/', '')}');
                     return Stack(
                       children: [
                         InkWell(
@@ -237,7 +235,7 @@ class PostWidget extends StatelessWidget {
                               aspectRatio: 1,
                               child: CachedNetworkImage(
                                 imageUrl:
-                                    '${dotenv.env['APP_URL']}${post.photos[index].replaceFirst('/', '')}',
+                                    '${dotenv.env['APP_URL']}${post.photos[index]}',
                                 fit: BoxFit.cover,
                               ),
                             ),

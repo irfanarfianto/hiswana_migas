@@ -166,19 +166,57 @@ class _DetailPostPageState extends State<DetailPostPage> {
             if (post.photos.isNotEmpty)
               SizedBox(
                 height: MediaQuery.of(context).size.width,
-                child: PageView.builder(
-                  itemCount: post.photos.length,
-                  itemBuilder: (context, index) {
-                    return ClipRRect(
-                      child: CachedNetworkImage(
-                        imageUrl:
-                            '${dotenv.env['APP_URL']}${post.photos[index]}',
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            const Center(child: CircularProgressIndicator()),
-                      ),
-                    );
-                  },
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      itemCount: post.photos.length,
+                      itemBuilder: (context, index) {
+                        return Stack(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                context.pushNamed(
+                                  'detail-post',
+                                  extra: post,
+                                );
+                              },
+                              child: ClipRRect(
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: CachedNetworkImage(
+                                    imageUrl:
+                                        '${dotenv.env['APP_URL']}${post.photos[index]}',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (post.photos.length > 1)
+                              Positioned(
+                                right: 10,
+                                top: 10,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${index + 1}/${post.photos.length}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall!
+                                        .copyWith(
+                                          color: Colors.white,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             if (post.photos.isEmpty)

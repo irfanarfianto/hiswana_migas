@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_flip_card/flipcard/gesture_flip_card.dart';
 import 'package:hiswana_migas/features/home/presentation/bloc/user/user_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class FlipCardWidget extends StatelessWidget {
   const FlipCardWidget({super.key});
@@ -57,6 +58,7 @@ class FlipCardWidget extends StatelessWidget {
                         top: 92,
                         child: BlocBuilder<UserBloc, UserState>(
                           builder: (context, state) {
+                            print(state);
                             if (state is UserLoaded) {
                               return Column(
                                 children: [
@@ -76,7 +78,14 @@ class FlipCardWidget extends StatelessWidget {
                                             backgroundImage: imageProvider,
                                           ),
                                           placeholder: (context, url) =>
-                                              const CircularProgressIndicator(),
+                                              const Skeletonizer(
+                                            enabled: true,
+                                            child: CircleAvatar(
+                                              radius: 90,
+                                              backgroundImage:
+                                                  AssetImage('assets/user.jpg'),
+                                            ),
+                                          ),
                                           errorWidget: (context, url, error) =>
                                               const CircleAvatar(
                                             radius: 90,

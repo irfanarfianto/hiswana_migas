@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    context.pop(true);
+                    Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: const Text('Keluar'),
                 ),
