@@ -9,7 +9,8 @@ class DioClient {
           BaseOptions(
               headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': 'MyApp',
               },
               responseType: ResponseType.json,
               sendTimeout: const Duration(seconds: 30),

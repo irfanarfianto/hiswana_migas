@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,12 +51,6 @@ class PostWidget extends StatelessWidget {
                     imageBuilder: (context, imageProvider) => CircleAvatar(
                       radius: 20,
                       backgroundImage: imageProvider,
-                    ),
-                    placeholder: (context, url) =>
-                        const CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => const CircleAvatar(
-                      radius: 20,
-                      child: Icon(Icons.error),
                     ),
                   ),
             title: Text(
@@ -237,6 +233,10 @@ class PostWidget extends StatelessWidget {
                                 imageUrl:
                                     '${dotenv.env['APP_URL']}${post.photos[index]}',
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
                               ),
                             ),
                           ),

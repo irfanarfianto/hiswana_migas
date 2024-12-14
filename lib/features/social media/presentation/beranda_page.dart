@@ -236,6 +236,7 @@ class _BerandaPageState extends State<BerandaPage> {
                 }
                 if (state is PostLoaded) {
                   return Expanded(
+                    // Tambahkan Expanded di sini
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -247,6 +248,7 @@ class _BerandaPageState extends State<BerandaPage> {
                     ),
                   );
                 }
+
                 return const SizedBox.shrink();
               },
             )

@@ -58,7 +58,6 @@ class FlipCardWidget extends StatelessWidget {
                         top: 92,
                         child: BlocBuilder<UserBloc, UserState>(
                           builder: (context, state) {
-                            print(state);
                             if (state is UserLoaded) {
                               return Column(
                                 children: [
