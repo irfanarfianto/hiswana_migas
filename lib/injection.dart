@@ -24,16 +24,12 @@ import 'package:hiswana_migas/features/social%20media/domain/usecase/get_posts_u
 import 'package:hiswana_migas/features/social%20media/domain/usecase/like_post_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/reply_usecase.dart';
 import 'package:hiswana_migas/features/social%20media/domain/usecase/update_post_usecase.dart';
-import 'package:http/http.dart' as http;
 import 'package:get_it/get_it.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   const secureStorage = FlutterSecureStorage();
-  await dotenv.load(fileName: ".env");
-  final baseUrl = dotenv.env['BASE_URL']!;
 
   // TokenLocalDataSource
   sl.registerLazySingleton(() => TokenLocalDataSource(secureStorage));
@@ -69,11 +65,10 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(
       dioClient: sl(), tokenLocalDataSource: sl(), userDatabaseHelper: sl()));
   // Post Data Sources
-  sl.registerLazySingleton<PostRemoteDataSource>(() => PostRemoteDataSourceImpl(
-      dioClient: sl(), tokenLocalDataSource: sl()));
+  sl.registerLazySingleton<PostRemoteDataSource>(() =>
+      PostRemoteDataSourceImpl(dioClient: sl(), tokenLocalDataSource: sl()));
 
   // Registering External Dependencies (http client)
-  sl.registerLazySingleton(() => http.Client());
   sl.registerSingleton<DioClient>(DioClient());
   sl.registerLazySingleton(() => secureStorage);
 }
