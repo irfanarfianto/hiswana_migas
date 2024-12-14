@@ -1,7 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
+
+import 'package:dio/dio.dart';
+import 'package:hiswana_migas/core/constants/api_urls.dart';
 import 'package:hiswana_migas/core/exaption.dart';
+import 'package:hiswana_migas/core/network/dio_client.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/auth/data/datasources/db/user_db_source.dart';
 import 'package:hiswana_migas/features/auth/data/models/kota_model.dart';
@@ -9,7 +11,6 @@ import 'package:hiswana_migas/features/auth/data/models/prov_model.dart';
 import 'package:hiswana_migas/features/auth/data/models/user_model.dart';
 import 'package:hiswana_migas/features/auth/domain/entities/kota_entities.dart';
 import 'package:hiswana_migas/features/auth/domain/entities/provinsi_entities.dart';
-import 'package:http/http.dart' as http;
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> getUserProfile(String userId);
@@ -21,111 +22,62 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final http.Client client;
-  final String baseUrl;
+  final DioClient dioClient;
   final TokenLocalDataSource tokenLocalDataSource;
   final UserDatabaseHelper userDatabaseHelper;
 
   AuthRemoteDataSourceImpl({
-    required this.client,
-    required this.baseUrl,
+    required this.dioClient,
     required this.tokenLocalDataSource,
     required this.userDatabaseHelper,
   });
 
   @override
   Future<UserModel> getUserProfile(String userId) async {
-    // Pertama cek apakah data sudah ada di lokal
     UserModel? localUser = await userDatabaseHelper.getUser();
     if (localUser != null) {
-      return localUser; // Kembalikan data lokal jika ada
+      return localUser;
     }
 
     try {
       final token = await tokenLocalDataSource.getToken();
 
-      final response = await client.get(
-        Uri.parse('${baseUrl}profile'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+      final response = await dioClient.get(
+        ApiUrls.profile,
+        options: Options(headers: {
           'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 30));
+        }),
+      );
 
-      if (response.statusCode == 200) {
-        final user = UserModel.fromJson(json.decode(response.body));
-
-        // Simpan data yang diambil dari server ke lokal
-        await userDatabaseHelper.insertUser(user);
-
-        return user;
-      } else {
-        throw ServerException(
-            'Gagal mendapatkan data user, status code: ${response.statusCode}');
-      }
-    } on SocketException catch (e) {
-      throw ServerException('Tidak dapat terhubung ke jaringan: $e');
-    } on TimeoutException catch (e) {
-      throw ServerException('Waktu request habis: $e');
-    } on HttpException catch (e) {
-      throw ServerException('Kesalahan HTTP: $e');
-    } on FormatException catch (e) {
-      throw ServerException('Format data tidak valid: $e');
-    } catch (e) {
-      throw ServerException('Terjadi kesalahan: $e');
+      final user = UserModel.fromJson(response.data);
+      await userDatabaseHelper.insertUser(user);
+      return user;
+    } on DioException catch (e) {
+      throw _handleDioException(e);
     }
   }
 
   @override
   Future<UserModel> login(String email, String password) async {
     try {
-      final response = await client.post(
-        Uri.parse('${baseUrl}login'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
+      final response = await dioClient.post(
+        ApiUrls.login,
+        data: {
           'email': email,
           'password': password,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
-        final decodedResponse = json.decode(response.body);
-
-        // Menyimpan token
-        final token = decodedResponse['access_token'];
-        if (token != null) {
-          tokenLocalDataSource.saveToken(token);
-        }
-
-        final user = decodedResponse['user'];
-        if (user != null) {
-          final userModel = UserModel.fromJson({
-            'name': user['name'],
-            'email': user['email'],
-            'province_code': user['province_code'],
-            'city_code': user['city_code'],
-            'register_number': user['register_number'],
-            'unique_number': user['unique_number'],
-            'profile_photo': user['profile_photo'],
-          });
-
-          await userDatabaseHelper.insertUser(userModel);
-
-          return userModel;
-        } else {
-          throw ServerException('User data tidak tersedia dalam respons.');
-        }
-      } else {
-        throw ServerException(
-            'Gagal login, silahkan cek kembali email dan password.');
+      final token = response.data['access_token'];
+      if (token != null) {
+        tokenLocalDataSource.saveToken(token);
       }
-    } catch (e) {
-      throw ServerException(
-          'Gagal login, silahkan cek kembali email dan password.');
+
+      final user = UserModel.fromJson(response.data['user']);
+      await userDatabaseHelper.insertUser(user);
+      return user;
+    } on DioException catch (e) {
+      throw _handleDioException(e);
     }
   }
 
@@ -133,86 +85,82 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<UserModel> register(String name, String email, String password,
       String provinceCode, String cityCode, File? profilePhoto) async {
     try {
-      // Buat request multipart
-      final uri = Uri.parse('${baseUrl}register');
-      final request = http.MultipartRequest('POST', uri);
+      final formData = FormData.fromMap({
+        'name': name,
+        'email': email,
+        'password': password,
+        'password_confirmation': password,
+        'province_code': provinceCode,
+        'city_code': cityCode,
+        if (profilePhoto != null)
+          'profile_photo': await MultipartFile.fromFile(profilePhoto.path),
+      });
 
-      // Tambahkan field
-      request.fields['name'] = name;
-      request.fields['email'] = email;
-      request.fields['password'] = password;
-      request.fields['password_confirmation'] = password;
-      request.fields['province_code'] = provinceCode;
-      request.fields['city_code'] = cityCode;
+      final response = await dioClient.post(
+        ApiUrls.register,
+        data: formData,
+        options: Options(headers: {
+          'Accept': 'application/json',
+        }),
+      );
 
-      // Tambahkan file jika ada
-      if (profilePhoto != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'profile_photo',
-          profilePhoto.path,
-        ));
-      }
-
-      // Set header
-      request.headers['Accept'] = 'application/json';
-
-      // Kirim request
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 201) {
-        return UserModel.fromJson(json.decode(response.body));
-      } else {
-        throw ServerException('Gagal registrasi, silahkan coba lagi');
-      }
-    } catch (e) {
-      throw ServerException('Gagal registrasi, silahkan coba lagi');
+      return UserModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioException(e);
     }
   }
 
   @override
   Future<List<ProvinsiEntities>> getProvinsi() async {
     try {
-      final response = await client.get(
-        Uri.parse('https://wilayah.id/api/provinces.json'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+      final response = await dioClient.get(
+        'https://wilayah.id/api/provinces.json',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> prov = json.decode(response.body)['data'];
+      // Validasi respons
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> prov = response.data['data'];
         return prov.map((provinsi) => ProvModel.fromJson(provinsi)).toList();
       } else {
         throw ServerException(
-            'Gagal mendapatkan data user, silahkan coba lagi');
+            'Failed to fetch provinces: ${response.statusCode} - ${response.statusMessage}');
       }
-    } catch (e) {
-      throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
+    } on DioException catch (e) {
+      throw _handleDioException(e);
     }
   }
 
   @override
   Future<List<KotaEntities>> getKota(String provinsiCode) async {
     try {
-      final response = await client.get(
-        Uri.parse('https://wilayah.id/api/regencies/$provinsiCode.json'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+      final response = await dioClient.get(
+        'https://wilayah.id/api/regencies/$provinsiCode.json',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> kota = json.decode(response.body)['data'];
-        return kota.map((kot) => KotaModel.fromJson(kot)).toList();
-      } else {
-        throw ServerException(
-            'Gagal mendapatkan data user, silahkan coba lagi');
-      }
-    } catch (e) {
-      throw ServerException('Gagal mendapatkan data user, silahkan coba lagi');
+      final List<dynamic> kota = response.data['data'];
+      return kota.map((kot) => KotaModel.fromJson(kot)).toList();
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    }
+  }
+
+  ServerException _handleDioException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ServerException('Koneksi timeout. Silakan coba lagi.');
+      case DioExceptionType.badResponse:
+        return ServerException(
+            'Gagal mendapatkan data. Status code: ${e.response?.statusCode}');
+      case DioExceptionType.cancel:
+        return ServerException('Request dibatalkan.');
+      case DioExceptionType.unknown:
+        if (e.message!.contains('Connection closed')) {
+          return ServerException('Koneksi terputus sebelum selesai.');
+        }
+        return ServerException('Kesalahan jaringan: ${e.message}');
+      default:
+        return ServerException('Kesalahan tak terduga: ${e.message}');
     }
   }
 }

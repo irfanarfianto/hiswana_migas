@@ -170,6 +170,8 @@ class _EditPostPageState extends State<EditPostPage> {
                               fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
                             ),
                             Positioned(
                               top: 4,

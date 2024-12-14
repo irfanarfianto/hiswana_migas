@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hiswana_migas/core/network/dio_client.dart';
 import 'package:hiswana_migas/core/token_storage.dart';
 import 'package:hiswana_migas/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:hiswana_migas/features/auth/data/datasources/db/user_db_source.dart';
@@ -66,15 +67,13 @@ Future<void> init() async {
       () => CommentsRepositoryImpl(remoteDataSource: sl()));
   // Registering Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(
-      client: sl(),
-      baseUrl: baseUrl,
-      tokenLocalDataSource: sl(),
-      userDatabaseHelper: sl()));
+      dioClient: sl(), tokenLocalDataSource: sl(), userDatabaseHelper: sl()));
   // Post Data Sources
   sl.registerLazySingleton<PostRemoteDataSource>(() => PostRemoteDataSourceImpl(
-      client: sl(), baseUrl: baseUrl, tokenLocalDataSource: sl()));
+      dioClient: sl(), tokenLocalDataSource: sl()));
 
   // Registering External Dependencies (http client)
   sl.registerLazySingleton(() => http.Client());
+  sl.registerSingleton<DioClient>(DioClient());
   sl.registerLazySingleton(() => secureStorage);
 }
